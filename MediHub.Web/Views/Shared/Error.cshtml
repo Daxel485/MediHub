@@ -1,0 +1,8 @@
+@model System.Web.Mvc.HandleErrorInfo
+@{
+    ViewBag.Title = "Error";
+}
+
+<h1 class="h3 text-danger">Ocurrió un error</h1>
+<p>No se pudo completar la solicitud. El detalle quedó registrado en la bitácora del sistema.</p>
+@Html.ActionLink("Volver al inicio", "Index", "Home", null, new { @class = "btn btn-outline-primary" })

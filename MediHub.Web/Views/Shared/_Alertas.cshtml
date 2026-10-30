@@ -1,0 +1,19 @@
+@using MediHub.Web.Extensions
+@{
+    var exito = TempData[ControllerExtensions.ClaveExito] as string;
+    var error = TempData[ControllerExtensions.ClaveError] as string;
+}
+@if (!string.IsNullOrEmpty(exito))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}

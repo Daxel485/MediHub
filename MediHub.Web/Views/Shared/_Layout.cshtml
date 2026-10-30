@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - MediHub</title>
+    @Styles.Render("~/Content/css")
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            @Html.ActionLink("MediHub", "Index", "Home", null, new { @class = "navbar-brand fw-semibold" })
+            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                    aria-controls="menuPrincipal" aria-expanded="false" aria-label="Alternar navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="menuPrincipal">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">@Html.ActionLink("Proveedores", "Index", "Proveedores", null, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Configuraciones", "Index", "Configuraciones", null, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", "Licitaciones", null, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Usuarios", "Index", "Usuarios", null, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Reportes", "Index", "Reportes", null, new { @class = "nav-link" })</li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <main class="container body-content">
+        @Html.Partial("_Alertas")
+        @RenderBody()
+    </main>
+    <footer class="container text-muted small border-top mt-4 pt-3">
+        &copy; @DateTime.Now.Year MediHub · Clínica Integral San Rafael
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>

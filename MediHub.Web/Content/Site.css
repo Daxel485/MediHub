@@ -1,0 +1,21 @@
+body {
+    padding-bottom: 20px;
+}
+
+.body-content {
+    padding-top: 24px;
+}
+
+form .form-control,
+form .form-select {
+    max-width: 480px;
+}
+
+form .row .form-control {
+    max-width: none;
+}
+
+.table td,
+.table th {
+    white-space: nowrap;
+}
