@@ -1,0 +1,39 @@
+@model IEnumerable<MediHub.Application.DTOs.ProveedorDto>
+@{
+    ViewBag.Title = "Proveedores";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Proveedores</h1>
+    @Html.ActionLink("Nuevo proveedor", "Crear", null, new { @class = "btn btn-primary" })
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Razón social</th>
+                <th>Cédula</th>
+                <th>Correo electrónico</th>
+                <th>Teléfono</th>
+                <th>Fecha de registro</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var proveedor in Model)
+            {
+                <tr>
+                    <td>@proveedor.Nombre</td>
+                    <td>@proveedor.Identificacion</td>
+                    <td>@proveedor.CorreoElectronico</td>
+                    <td>@proveedor.Telefono</td>
+                    <td>@proveedor.FechaDeRegistro.ToString("dd/MM/yyyy")</td>
+                    <td>@Html.Partial("_Estado", proveedor.Estado)</td>
+                    <td>@Html.ActionLink("Configuración", "Index", "Configuraciones", new { idProveedor = proveedor.IdProveedor }, new { @class = "btn btn-sm btn-outline-primary" })</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
