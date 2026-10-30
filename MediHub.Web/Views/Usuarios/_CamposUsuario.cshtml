@@ -1,0 +1,29 @@
+@model MediHub.Web.ViewModels.UsuarioFormViewModel
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        @Html.LabelFor(m => m.Nombres, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Nombres, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Nombres, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4 mb-3">
+        @Html.LabelFor(m => m.PrimerApellido, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.PrimerApellido, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.PrimerApellido, "", new { @class = "text-danger" })
+    </div>
+    <div class="col-md-4 mb-3">
+        @Html.LabelFor(m => m.SegundoApellido, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.SegundoApellido, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.SegundoApellido, "", new { @class = "text-danger" })
+    </div>
+</div>
+<div class="mb-3">
+    @Html.LabelFor(m => m.Identificacion, new { @class = "form-label" })
+    @Html.TextBoxFor(m => m.Identificacion, new { @class = "form-control", maxlength = "10", placeholder = "112340567" })
+    @Html.ValidationMessageFor(m => m.Identificacion, "", new { @class = "text-danger" })
+</div>
+<div class="mb-3">
+    @Html.LabelFor(m => m.CorreoElectronico, new { @class = "form-label" })
+    @Html.TextBoxFor(m => m.CorreoElectronico, new { @class = "form-control", type = "email" })
+    @Html.ValidationMessageFor(m => m.CorreoElectronico, "", new { @class = "text-danger" })
+</div>
