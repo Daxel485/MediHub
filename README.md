@@ -43,7 +43,7 @@ El enunciado del avance (SINPE Empresarial) se aplicó al dominio de MediHub con
 | SINPE | Oferta |
 | Monto recaudado | Monto total ofertado |
 
-### Configuración de proveedor (30 pts)
+### Configuración de proveedor
 
 Se accede desde la lista de proveedores (botón **Configuración**) o desde el menú.
 
@@ -52,24 +52,24 @@ Se accede desde la lista de proveedores (botón **Configuración**) o desde el m
 - **Registrar:** solo se permite una configuración por proveedor. Se valida antes de guardar y, si ya existe, se muestra el mensaje y se vuelve a la vista de crear. Además hay un índice único en `IdProveedor`. Las fechas y el estado no se piden al usuario.
 - **Editar:** solo cambia tipo, comisión y estado, y actualiza `FechaDeModificacion` automáticamente.
 
-### Reportes mensuales (30 pts)
+### Reportes mensuales
 
 - **Listar:** muestra proveedor, cantidad de licitaciones, monto ofertado, cantidad de ofertas, comisión y fecha del reporte.
 - **Generar reportes:** un único método (`ReporteMensualService.GenerarReportes`) calcula el mes actual de todos los proveedores con una sola consulta agrupada. Si el proveedor ya tiene reporte del mes, lo actualiza en lugar de crear otro.
 - `MontoTotalComision = MontoTotalOfertado × Comision / 100` (una comisión de 20 equivale a 20 %). Si el proveedor no tiene configuración o la tiene inactiva, la comisión es 0.
 
-### Usuarios (20 pts)
+### Usuarios
 
 - **Listar:** muestra nombres, apellidos, identificación, correo, fechas, estado y Editar.
 - **Registrar:** no permite dos usuarios con la misma identificación (validación previa e índice único). `IdNetUser` queda en `null` hasta que se integre ASP.NET Identity.
 - **Editar:** solo cambia nombres, apellidos, identificación, correo y estado, y actualiza `FechaDeModificacion`.
 
-### Licitaciones: sincronizar ofertas (10 pts)
+### Licitaciones: sincronizar ofertas
 
 En **Licitaciones → Ver ofertas**, cada oferta no sincronizada tiene el botón **Sincronizar**, que cambia su estado a sincronizada.
 Una oferta ya sincronizada no se puede volver a sincronizar. El título de la licitación es único.
 
-### Bitácora (10 pts)
+### Bitácora
 
 La tabla `BITACORA_EVENTOS` registra cada evento de Registrar, Editar o Error con la tabla afectada, la fecha,
 la descripción y los datos anteriores y posteriores en JSON. Los errores guardan también el `StackTrace`.
