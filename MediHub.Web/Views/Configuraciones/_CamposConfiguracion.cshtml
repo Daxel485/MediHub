@@ -1,0 +1,13 @@
+@model MediHub.Web.ViewModels.ConfiguracionFormViewModel
+
+<div class="mb-3">
+    @Html.LabelFor(m => m.TipoConfiguracion, new { @class = "form-label" })
+    @Html.DropDownListFor(m => m.TipoConfiguracion, Model.Tipos, "Seleccione el tipo", new { @class = "form-select" })
+    <div class="form-text">Plataforma: sincroniza desde MediHub. Externa: el proveedor consulta por API. Ambas: los dos escenarios.</div>
+    @Html.ValidationMessageFor(m => m.TipoConfiguracion, "", new { @class = "text-danger" })
+</div>
+<div class="mb-3">
+    @Html.LabelFor(m => m.Comision, new { @class = "form-label" })
+    @Html.TextBoxFor(m => m.Comision, new { @class = "form-control", type = "number", min = "0", max = "100" })
+    @Html.ValidationMessageFor(m => m.Comision, "", new { @class = "text-danger" })
+</div>

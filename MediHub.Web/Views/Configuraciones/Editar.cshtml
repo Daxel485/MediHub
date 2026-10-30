@@ -1,0 +1,28 @@
+@model MediHub.Web.ViewModels.ConfiguracionFormViewModel
+@{
+    ViewBag.Title = "Editar configuración";
+}
+
+<h1 class="h3 mb-3">Editar configuración</h1>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(m => m.IdConfiguracion)
+    @Html.HiddenFor(m => m.IdProveedor)
+    @Html.HiddenFor(m => m.NombreProveedor)
+
+    <div class="mb-3">
+        <label class="form-label">Proveedor</label>
+        <input class="form-control" value="@Model.NombreProveedor" readonly />
+    </div>
+    @Html.Partial("_CamposConfiguracion", Model)
+    <div class="form-check mb-3">
+        @Html.CheckBoxFor(m => m.Estado, new { @class = "form-check-input" })
+        @Html.LabelFor(m => m.Estado, new { @class = "form-check-label" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    @Html.ActionLink("Cancelar", "Index", new { idProveedor = Model.IdProveedor }, new { @class = "btn btn-outline-secondary" })
+}
