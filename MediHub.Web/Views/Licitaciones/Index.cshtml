@@ -1,0 +1,46 @@
+@model IEnumerable<MediHub.Application.DTOs.LicitacionDto>
+@{
+    ViewBag.Title = "Licitaciones";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Licitaciones</h1>
+    @Html.ActionLink("Nueva licitación", "Crear", null, new { @class = "btn btn-primary" })
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Fecha de cierre</th>
+                <th class="text-end">Ofertas</th>
+                <th class="text-end">Sin sincronizar</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var licitacion in Model)
+            {
+                <tr>
+                    <td>@licitacion.Titulo</td>
+                    <td>@licitacion.FechaDeCierre.ToString("dd/MM/yyyy")</td>
+                    <td class="text-end">@licitacion.CantidadDeOfertas</td>
+                    <td class="text-end">
+                        @if (licitacion.OfertasPendientes > 0)
+                        {
+                            <span class="badge text-bg-warning">@licitacion.OfertasPendientes</span>
+                        }
+                        else
+                        {
+                            <span>0</span>
+                        }
+                    </td>
+                    <td>@Html.Partial("_Estado", licitacion.Estado)</td>
+                    <td>@Html.ActionLink("Ver ofertas", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
