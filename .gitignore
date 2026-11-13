@@ -1,0 +1,22 @@
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+## Compilación
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+## NuGet (se restauran al compilar)
+packages/
+*.nupkg
+
+## Base de datos local
+App_Data/*.mdf
+App_Data/*.ldf
+
+## Pruebas
+TestResults/

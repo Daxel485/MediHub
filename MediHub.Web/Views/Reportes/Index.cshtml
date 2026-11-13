@@ -1,0 +1,49 @@
+@model IEnumerable<MediHub.Application.DTOs.ReporteMensualDto>
+@{
+    ViewBag.Title = "Reportes mensuales";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Reportes mensuales</h1>
+    @using (Html.BeginForm("Generar", "Reportes", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary">Generar reportes</button>
+    }
+</div>
+<p class="text-muted">Genera el reporte del mes actual de todos los proveedores. Si ya existe, se actualiza con los datos más recientes.</p>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Todavía no se han generado reportes.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre del proveedor</th>
+                    <th class="text-end">Licitaciones</th>
+                    <th class="text-end">Monto ofertado</th>
+                    <th class="text-end">Ofertas</th>
+                    <th class="text-end">Comisión</th>
+                    <th>Fecha del reporte</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reporte in Model)
+                {
+                    <tr>
+                        <td>@reporte.NombreProveedor</td>
+                        <td class="text-end">@reporte.CantidadDeLicitaciones</td>
+                        <td class="text-end">₡@reporte.MontoTotalOfertado.ToString("N2")</td>
+                        <td class="text-end">@reporte.CantidadDeOfertas</td>
+                        <td class="text-end">₡@reporte.MontoTotalComision.ToString("N2")</td>
+                        <td>@reporte.FechaDelReporte.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

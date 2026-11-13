@@ -1,0 +1,56 @@
+@model IEnumerable<MediHub.Application.DTOs.ConfiguracionProveedorDto>
+@{
+    var proveedor = ViewBag.Proveedor as MediHub.Application.DTOs.ProveedorDto;
+    ViewBag.Title = proveedor == null ? "Configuraciones" : "Configuración de " + proveedor.Nombre;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">@ViewBag.Title</h1>
+        @if (proveedor != null)
+        {
+            @Html.ActionLink("← Volver a proveedores", "Index", "Proveedores", null, new { @class = "small" })
+        }
+    </div>
+    @if (proveedor == null || !Model.Any())
+    {
+        @Html.ActionLink("Nueva configuración", "Crear", new { idProveedor = proveedor == null ? (int?)null : proveedor.IdProveedor }, new { @class = "btn btn-primary" })
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No hay configuraciones registradas.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre del proveedor</th>
+                    <th>Tipo de configuración</th>
+                    <th>Comisión</th>
+                    <th>Fecha de registro</th>
+                    <th>Fecha de modificación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var configuracion in Model)
+                {
+                    <tr>
+                        <td>@configuracion.NombreProveedor</td>
+                        <td>@configuracion.TipoConfiguracionDescripcion</td>
+                        <td>@configuracion.Comision %</td>
+                        <td>@configuracion.FechaDeRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(configuracion.FechaDeModificacion.HasValue ? configuracion.FechaDeModificacion.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                        <td>@Html.Partial("_Estado", configuracion.Estado)</td>
+                        <td>@Html.ActionLink("Editar", "Editar", new { id = configuracion.IdConfiguracion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,22 @@
+@model MediHub.Web.ViewModels.UsuarioFormViewModel
+@{
+    ViewBag.Title = "Nuevo usuario";
+}
+
+<h1 class="h3 mb-3">Nuevo usuario</h1>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.IdProveedor, new { @class = "form-label" })
+        @Html.DropDownListFor(m => m.IdProveedor, Model.Proveedores, "Seleccione un proveedor", new { @class = "form-select" })
+        @Html.ValidationMessageFor(m => m.IdProveedor, "", new { @class = "text-danger" })
+    </div>
+    @Html.Partial("_CamposUsuario", Model)
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-outline-secondary" })
+}

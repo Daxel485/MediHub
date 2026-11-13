@@ -1,0 +1,31 @@
+@model MediHub.Web.ViewModels.LicitacionFormViewModel
+@{
+    ViewBag.Title = "Nueva licitación";
+}
+
+<h1 class="h3 mb-3">Nueva licitación</h1>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Titulo, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.Titulo, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Titulo, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.Descripcion, new { @class = "form-label" })
+        @Html.TextAreaFor(m => m.Descripcion, 3, 60, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Descripcion, "", new { @class = "text-danger" })
+    </div>
+    <div class="mb-3">
+        @Html.LabelFor(m => m.FechaDeCierre, new { @class = "form-label" })
+        @Html.TextBoxFor(m => m.FechaDeCierre, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+        @Html.ValidationMessageFor(m => m.FechaDeCierre, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-outline-secondary" })
+}
