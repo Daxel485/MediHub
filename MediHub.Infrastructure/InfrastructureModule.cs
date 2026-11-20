@@ -19,6 +19,9 @@ namespace MediHub.Infrastructure
 
             // El reloj es inmutable y no depende de la solicitud.
             builder.RegisterType<SystemClock>().As<IClock>().SingleInstance();
+
+            // Sin estado: una sola instancia sirve para todas las solicitudes.
+            builder.RegisterType<ServicioCorreoSmtp>().As<IServicioCorreo>().SingleInstance();
         }
     }
 }

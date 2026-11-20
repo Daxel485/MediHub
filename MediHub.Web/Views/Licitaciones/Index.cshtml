@@ -16,6 +16,7 @@
                 <th>Fecha de cierre</th>
                 <th class="text-end">Ofertas</th>
                 <th class="text-end">Sin sincronizar</th>
+                <th>Etapa</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -37,8 +38,9 @@
                             <span>0</span>
                         }
                     </td>
+                    <td>@Html.Partial("_EstadoLicitacion", licitacion)</td>
                     <td>@Html.Partial("_Estado", licitacion.Estado)</td>
-                    <td>@Html.ActionLink("Ver ofertas", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
+                    <td>@Html.ActionLink("Gestionar", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
                 </tr>
             }
         </tbody>

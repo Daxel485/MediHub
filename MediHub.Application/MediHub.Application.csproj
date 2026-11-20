@@ -85,8 +85,13 @@
     <Compile Include="Interfaces\ILicitacionService.cs" />
     <Compile Include="Interfaces\IProveedorService.cs" />
     <Compile Include="Interfaces\IReporteMensualService.cs" />
+    <Compile Include="Interfaces\IServicioCorreo.cs" />
     <Compile Include="Interfaces\IUsuarioService.cs" />
     <Compile Include="Mappings\ApplicationProfile.cs" />
+    <Compile Include="Notificaciones\CreadorDeNotificacion.cs" />
+    <Compile Include="Notificaciones\INotificacionCorreo.cs" />
+    <Compile Include="Notificaciones\NotificacionesCorreo.cs" />
+    <Compile Include="Notificaciones\TipoNotificacion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\BitacoraService.cs" />
     <Compile Include="Services\ConfiguracionProveedorService.cs" />

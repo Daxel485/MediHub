@@ -63,5 +63,35 @@ namespace MediHub.Web.Controllers
             TempData.MostrarResultado(_servicio.SincronizarOferta(idOferta));
             return RedirectToAction("Ofertas", new { id = idLicitacion });
         }
+
+        // Transiciones del ciclo de vida. El servicio delega en el estado actual de la licitación (patrón State),
+        // que rechaza las transiciones no permitidas con un mensaje para el usuario.
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult Publicar(int id)
+        {
+            TempData.MostrarResultado(_servicio.Publicar(id));
+            return RedirectToAction("Ofertas", new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult IniciarEvaluacion(int id)
+        {
+            TempData.MostrarResultado(_servicio.IniciarEvaluacion(id));
+            return RedirectToAction("Ofertas", new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult Adjudicar(int idLicitacion, int idOferta)
+        {
+            TempData.MostrarResultado(_servicio.Adjudicar(idLicitacion, idOferta));
+            return RedirectToAction("Ofertas", new { id = idLicitacion });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult Cerrar(int id)
+        {
+            TempData.MostrarResultado(_servicio.Cerrar(id));
+            return RedirectToAction("Ofertas", new { id });
+        }
     }
 }

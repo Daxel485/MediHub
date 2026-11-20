@@ -92,7 +92,9 @@ namespace MediHub.Infrastructure.Migrations
                 Descripcion = descripcion,
                 FechaDeRegistro = registro,
                 FechaDeCierre = cierre,
-                Estado = true
+                Estado = true,
+                // Ya tienen ofertas, así que se cargan como publicadas.
+                EstadoDelProceso = EstadoLicitacion.Publicada
             };
         }
 

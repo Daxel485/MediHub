@@ -1,0 +1,14 @@
+@model MediHub.Application.DTOs.LicitacionDto
+@using MediHub.Domain.Enums
+@{
+    string clase;
+    switch (Model.EstadoDelProceso)
+    {
+        case EstadoLicitacion.Borrador: clase = "text-bg-secondary"; break;
+        case EstadoLicitacion.Publicada: clase = "text-bg-primary"; break;
+        case EstadoLicitacion.EnEvaluacion: clase = "text-bg-warning"; break;
+        case EstadoLicitacion.Adjudicada: clase = "text-bg-success"; break;
+        default: clase = "text-bg-dark"; break;
+    }
+}
+<span class="badge @clase">@Model.EstadoDelProcesoDescripcion</span>

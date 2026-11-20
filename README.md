@@ -66,8 +66,53 @@ Se accede desde la lista de proveedores (botón **Configuración**) o desde el m
 
 ### Licitaciones: sincronizar ofertas
 
-En **Licitaciones → Ver ofertas**, cada oferta no sincronizada tiene el botón **Sincronizar**, que cambia su estado a sincronizada.
+En **Licitaciones → Gestionar**, cada oferta no sincronizada tiene el botón **Sincronizar**, que cambia su estado a sincronizada.
 Una oferta ya sincronizada no se puede volver a sincronizar. El título de la licitación es único.
+Solo se sincronizan ofertas mientras la licitación está *Publicada* o *En evaluación*.
+
+## Avance 3 (Persona 3): ciclo de vida y notificaciones
+
+### Patrón State: estados de la licitación
+
+```
+Borrador ──Publicar──▶ Publicada ──Pasar a evaluación──▶ En evaluación ──Adjudicar──▶ Adjudicada
+    │                      │                                  │                          │
+    └──────────────────────┴──────────────Cerrar──────────────┴──────────────────────────┴──▶ Cerrada
+```
+
+- `MediHub.Domain/Estados`: `EstadoLicitacionBase` (estado abstracto) y un estado concreto por etapa
+  (`EstadoBorrador`, `EstadoPublicada`, `EstadoEnEvaluacion`, `EstadoAdjudicada`, `EstadoCerrada`).
+  La clase base prohíbe todas las transiciones; cada estado sobrescribe solo las que admite.
+- `Licitacion` guarda la etapa en `EstadoDelProceso` (enum `EstadoLicitacion`, columna `int`) y expone `EstadoActual`.
+  `Publicar`, `IniciarEvaluacion`, `Adjudicar` y `Cerrar` delegan en el estado actual.
+- Reglas: solo se publica si la fecha de cierre no ha pasado; solo se evalúa con al menos una oferta;
+  solo se adjudica una oferta sincronizada de la misma licitación (queda en `IdOfertaAdjudicada`); *Cerrada* es final.
+- Una licitación nueva queda en *Borrador*. La migración `CicloDeVidaLicitacion` deja las existentes como *Publicada*.
+- Los botones de la vista **Gestionar** dependen de lo que permite el estado (`PuedePublicar`, `PuedeAdjudicar`, ...).
+
+### Patrón Factory Method: notificaciones por correo
+
+- `MediHub.Application/Notificaciones`: `CreadorDeNotificacion` define `Enviar` (crear y enviar) y el método fábrica
+  abstracto `CrearNotificacion`. Cada creador concreto (`CreadorNotificacionPublicacion`, `CreadorNotificacionAdjudicacion`,
+  `CreadorNotificacionRechazo`) devuelve su producto (`NotificacionPublicacion`, `NotificacionAdjudicacion`, `NotificacionRechazo`).
+- El envío se hace con `IServicioCorreo`, implementado por `ServicioCorreoSmtp` en infraestructura.
+
+| Transición | Correos |
+|---|---|
+| Publicar | Publicación a todos los proveedores activos |
+| Adjudicar | Adjudicación al proveedor ganador y rechazo a los demás oferentes (uno por proveedor) |
+| Cerrar desde *Publicada* o *En evaluación* (desierta) | Rechazo a todos los oferentes |
+| Pasar a evaluación, cerrar un borrador o una adjudicada | Ninguno |
+
+### Conexión en `LicitacionService`
+
+`Publicar`, `IniciarEvaluacion`, `Adjudicar` y `Cerrar` siguen el mismo flujo: cargar la licitación, delegar la transición
+al estado, guardar, registrar el cambio en la bitácora y enviar las notificaciones con la fábrica correspondiente.
+Una transición no permitida devuelve el mensaje del estado sin guardar nada. Si un correo falla, la transición se conserva,
+el error queda en la bitácora (tabla `Notificacion`) y el mensaje indica cuántos correos no se enviaron.
+
+En desarrollo, `Web.config` (`system.net/mailSettings`) guarda los correos como archivos `.eml` en `MediHub.Web/App_Data/Correos`.
+Para enviarlos por un servidor SMTP real, cambie `deliveryMethod` a `Network` y configure el elemento `<network>`.
 
 ### Bitácora
 
