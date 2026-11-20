@@ -66,7 +66,7 @@ Se accede desde la lista de proveedores (botón **Configuración**) o desde el m
 
 ### Licitaciones: sincronizar ofertas
 
-En **Licitaciones → Ver ofertas**, cada oferta no sincronizada tiene el botón **Sincronizar**, que cambia su estado a sincronizada.
+Al vencer la recepción, **Licitaciones → Ver ofertas** permite al comprador sincronizar las ofertas recibidas.
 Una oferta ya sincronizada no se puede volver a sincronizar. El título de la licitación es único.
 
 ### Bitácora
@@ -83,3 +83,18 @@ la descripción y los datos anteriores y posteriores en JSON. Los errores guarda
 `Proveedor`, `ConfiguracionProveedor`, `ReporteMensual`, `Usuario`, `Licitacion`, `Oferta` y `BITACORA_EVENTOS`.
 Las columnas de `ConfiguracionProveedor`, `ReporteMensual` y `Usuario` siguen los tipos del enunciado:
 `int` para la comisión, `decimal` para los montos, `varchar` con las longitudes indicadas y `bit` para el estado.
+
+
+## Avance 3 · Persona 5
+
+El proveedor entra por **Inicio → Licitaciones vigentes**. Puede consultar cada compra abierta y presentar una oferta con precio unitario y vencimiento por ítem, plazo de entrega y monto total. La cuenta autenticada determina a qué proveedor pertenece la oferta. El servidor comprueba el plazo, las cantidades de la licitación y la existencia de ofertas previas antes de guardar.
+
+El comprador entra por **Licitaciones → Ver ofertas**. Al cumplirse la fecha de cierre, la tabla muestra precios, vencimientos y puntajes por ítem. El comprador confirma una oferta ganadora para toda la licitación. La adjudicación y el evento en `BITACORA_EVENTOS` se guardan en la misma transacción con la oferta, el proveedor, el comprador y la fecha. Los reportes de montos globales requieren el rol Administrador para mantener las ofertas ciegas.
+
+### Integración del grupo
+
+- **Cuentas.** Las acciones usan los roles `Proveedor` y `Comprador`. Para ofertar, el identificador de Identity en `ClaimTypes.NameIdentifier` debe corresponder al `Usuario.IdNetUser` de un usuario y un proveedor activos.
+- **Ítems.** El proyecto base presenta cada licitación como una línea de cantidad uno. Cuando el catálogo esté disponible, su adaptador de `ITerminosLicitacion` podrá proporcionar los ítems en un orden estable y el PDF asociado. El portal ya admite varias líneas y valida sus identificadores al guardar.
+- **Vigencia.** En la base recibida se usan `Licitacion.Estado` y `FechaDeCierre`. Al integrar el ciclo de vida del grupo, la consulta de vigentes y las validaciones de envío y adjudicación deben usar las fases equivalentes.
+- **Puntajes.** El comparativo lee `DetalleOferta.Puntaje`. Cada valor aparece como **Pendiente** hasta que el módulo de evaluación lo guarde. Las ofertas históricas del avance anterior conservan el monto global.
+- **Datos.** La migración EF6 `PortalOfertas` agrega el detalle de oferta, el plazo de entrega y la adjudicación. Se aplica mediante el inicializador existente de MediHub.

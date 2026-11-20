@@ -1,61 +1,76 @@
-@model MediHub.Web.ViewModels.LicitacionOfertasViewModel
+@model MediHub.Application.DTOs.ComparacionOfertasDto
 @{
-    ViewBag.Title = "Ofertas · " + Model.Licitacion.Titulo;
+    var licitacion = Model.Licitacion;
+    ViewBag.Title = licitacion.Titulo;
 }
 
-<div class="mb-3">
-    <h1 class="h3 mb-0">@Model.Licitacion.Titulo</h1>
-    <p class="text-muted mb-1">@Model.Licitacion.Descripcion</p>
-    <p class="small mb-1">Cierre: @Model.Licitacion.FechaDeCierre.ToString("dd/MM/yyyy")</p>
-    @Html.ActionLink("← Volver a licitaciones", "Index", null, new { @class = "small" })
+<div class="mb-4">
+    @Html.ActionLink("Volver a licitaciones", "Index")
+    <h1 class="h3 mt-2">@licitacion.Titulo</h1>
+    <p>@licitacion.Descripcion</p>
+    <p>Fin de recepción el @licitacion.FechaDeCierre.ToString("dd/MM/yyyy HH:mm")</p>
 </div>
 
-@if (!Model.Ofertas.Any())
+@if (!Model.RecepcionCerrada)
 {
-    <p class="text-muted">Esta licitación todavía no tiene ofertas.</p>
+    <p class="text-muted">Los montos y los detalles estarán disponibles al finalizar la recepción de ofertas.</p>
+}
+else if (!Model.Ofertas.Any())
+{
+    <p class="text-muted">No se recibieron ofertas.</p>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
+    <h2 class="h5">Ofertas recibidas</h2>
+    <div class="table-responsive mb-4">
+        <table class="table table-striped align-middle">
             <thead>
                 <tr>
-                    <th>Proveedor</th>
-                    <th>Descripción</th>
-                    <th class="text-end">Monto</th>
-                    <th>Fecha de envío</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col" class="text-end">Monto total</th>
+                    <th scope="col">Plazo (días)</th>
+                    <th scope="col">Fecha de envío</th>
+                    <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var oferta in Model.Ofertas)
                 {
                     <tr>
-                        <td>@oferta.NombreProveedor</td>
+                        <th scope="row">@oferta.NombreProveedor</th>
                         <td>@oferta.Descripcion</td>
                         <td class="text-end">₡@oferta.Monto.ToString("N2")</td>
+                        <td>@(oferta.PlazoEntregaDias?.ToString() ?? "Sin dato")</td>
                         <td>@oferta.FechaDeEnvio.ToString("dd/MM/yyyy HH:mm")</td>
                         <td>
-                            @if (oferta.Sincronizada)
+                            @if (Model.IdOfertaGanadora == oferta.IdOferta)
                             {
-                                <span class="badge text-bg-success">Sincronizada</span>
+                                <span class="badge text-bg-success">Ganadora</span>
                             }
-                            else
+                            @if (Model.PuedeAdjudicar)
                             {
-                                <span class="badge text-bg-warning">No sincronizada</span>
-                            }
-                        </td>
-                        <td>
-                            @if (!oferta.Sincronizada)
-                            {
-                                using (Html.BeginForm("Sincronizar", "Licitaciones", FormMethod.Post))
+                                using (Html.BeginForm("Adjudicar", "Licitaciones", new { id = licitacion.IdLicitacion },
+                                    FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('¿Confirma la adjudicación de esta oferta?');" }))
                                 {
                                     @Html.AntiForgeryToken()
-                                    @Html.Hidden("idOferta", oferta.IdOferta)
-                                    @Html.Hidden("idLicitacion", oferta.IdLicitacion)
-                                    <button type="submit" class="btn btn-sm btn-primary">Sincronizar</button>
+                                    <input type="hidden" name="idOferta" value="@oferta.IdOferta" />
+                                    <button type="submit" class="btn btn-sm btn-primary">Adjudicar</button>
                                 }
+                            }
+                            @if (!oferta.Sincronizada)
+                            {
+                                using (Html.BeginForm("Sincronizar", "Licitaciones", FormMethod.Post, new { @class = "d-inline" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="idOferta" value="@oferta.IdOferta" />
+                                    <input type="hidden" name="idLicitacion" value="@licitacion.IdLicitacion" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Sincronizar</button>
+                                }
+                            }
+                            @if (oferta.Sincronizada)
+                            {
+                                <span class="badge text-bg-secondary">Sincronizada</span>
                             }
                         </td>
                     </tr>
@@ -63,4 +78,44 @@ else
             </tbody>
         </table>
     </div>
+
+    var filasPorItem = Model.Ofertas
+        .SelectMany(oferta => oferta.Detalles.Select(detalle => new { Oferta = oferta, Detalle = detalle }))
+        .GroupBy(fila => fila.Detalle.IdItemLicitacion)
+        .OrderBy(grupo => grupo.Key)
+        .ToList();
+    <h2 class="h5">Comparación por ítem</h2>
+    if (Model.Ofertas.Any(oferta => oferta.Detalles.Count == 0))
+    {
+        <p class="text-muted">Las ofertas registradas antes del portal aparecen en el resumen con su monto global.</p>
+    }
+    foreach (var grupo in filasPorItem)
+    {
+        <h3 class="h6 mt-3">@grupo.First().Detalle.DescripcionItem</h3>
+        <div class="table-responsive pb-2">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Proveedor</th>
+                        <th scope="col" class="text-end">Cantidad</th>
+                        <th scope="col" class="text-end">Precio unitario</th>
+                        <th scope="col">Vencimiento del lote</th>
+                        <th scope="col" class="text-end">Puntaje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fila in grupo.OrderByDescending(f => f.Detalle.Puntaje))
+                    {
+                        <tr>
+                            <th scope="row">@fila.Oferta.NombreProveedor</th>
+                            <td class="text-end">@fila.Detalle.Cantidad.ToString("0.####")</td>
+                            <td class="text-end">₡@fila.Detalle.PrecioUnitario.ToString("N2")</td>
+                            <td>@fila.Detalle.FechaVencimientoLote.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">@(fila.Detalle.Puntaje?.ToString("0.##") ?? "Pendiente")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 }

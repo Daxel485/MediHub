@@ -22,7 +22,14 @@
             <div class="card-body">
                 <h2 class="h5 card-title">Licitaciones</h2>
                 <p class="card-text">Licitaciones publicadas y sincronización de las ofertas recibidas.</p>
-                @Html.ActionLink("Ver licitaciones", "Index", "Licitaciones", null, new { @class = "btn btn-primary" })
+                @if (User.IsInRole("Proveedor"))
+                {
+                    @Html.ActionLink("Licitaciones vigentes", "Index", "PortalProveedor", null, new { @class = "btn btn-primary" })
+                }
+                else if (User.IsInRole("Comprador"))
+                {
+                    @Html.ActionLink("Gestionar licitaciones", "Index", "Licitaciones", null, new { @class = "btn btn-primary" })
+                }
             </div>
         </div>
     </div>

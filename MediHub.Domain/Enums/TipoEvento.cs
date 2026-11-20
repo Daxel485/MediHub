@@ -5,6 +5,7 @@ namespace MediHub.Domain.Enums
         Registrar,
         Editar,
         Eliminar,
-        Error
+        Error,
+        Adjudicar
     }
 }

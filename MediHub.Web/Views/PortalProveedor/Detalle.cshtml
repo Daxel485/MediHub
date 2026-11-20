@@ -1,0 +1,111 @@
+@using System.Globalization
+@model MediHub.Web.ViewModels.OfertaFormViewModel
+@{
+    var licitacion = Model.Portal.Licitacion;
+    ViewBag.Title = licitacion.Titulo;
+}
+
+<div class="mb-4">
+    @Html.ActionLink("Volver a licitaciones vigentes", "Index")
+    <h1 class="h3 mt-2">@licitacion.Titulo</h1>
+    <p>@licitacion.Descripcion</p>
+    <p>Recibe ofertas hasta el @licitacion.FechaDeCierre.ToString("dd/MM/yyyy HH:mm").</p>
+    @if (Model.Portal.TienePdf)
+    {
+        @Html.ActionLink("Descargar términos de referencia (PDF)", "Terminos", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-outline-secondary" })
+    }
+</div>
+
+@if (Model.Portal.TieneOfertaPropia)
+{
+    <p class="alert alert-success">Su proveedor ya presentó una oferta para esta licitación.</p>
+}
+else if (Model.Portal.Items.Count == 0)
+{
+    <p class="alert alert-warning">Los ítems de esta licitación no están disponibles.</p>
+}
+else
+{
+    using (Html.BeginForm("Enviar", "PortalProveedor", new { id = licitacion.IdLicitacion }, FormMethod.Post, new { id = "formOferta" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        <h2 class="h5">Presentar oferta</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Ítem</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Precio unitario (₡)</th>
+                        <th scope="col">Vencimiento del lote</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Portal.Items.Count; i++)
+                    {
+                        var item = Model.Portal.Items[i];
+                        <tr>
+                            <th scope="row">
+                                @item.Descripcion
+                                @if (item.VidaUtilMinimaMeses > 0)
+                                {
+                                    <small class="d-block text-muted">Vida útil mínima de @item.VidaUtilMinimaMeses meses a la entrega</small>
+                                }
+                                @if (item.RequiereCadenaDeFrio)
+                                {
+                                    <small class="d-block text-muted">Requiere cadena de frío</small>
+                                }
+                            </th>
+                            <td>@item.Cantidad.ToString("0.####") @item.Unidad</td>
+                            <td>
+                                @Html.HiddenFor(m => m.Detalles[i].IdItemLicitacion)
+                                @Html.TextBoxFor(m => m.Detalles[i].PrecioUnitario, new { @class = "form-control precio-unitario", inputmode = "decimal", maxlength = "20", required = "required", data_cantidad = item.Cantidad.ToString(CultureInfo.InvariantCulture), aria_label = "Precio unitario para " + item.Descripcion })
+                            </td>
+                            <td>@Html.TextBoxFor(m => m.Detalles[i].FechaVencimientoLote, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", required = "required", aria_label = "Vencimiento del lote para " + item.Descripcion })</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <p class="fw-semibold">Total estimado <output id="totalOferta" aria-live="polite">₡0,00</output></p>
+        <div class="mb-3">
+            @Html.LabelFor(m => m.PlazoEntregaDias, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.PlazoEntregaDias, new { @class = "form-control", type = "number", min = "1", required = "required" })
+        </div>
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Descripcion, new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.Descripcion, new { @class = "form-control", maxlength = "500", rows = "3" })
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar oferta</button>
+    }
+}
+
+@section scripts {
+    @if (!Model.Portal.TieneOfertaPropia && Model.Portal.Items.Count > 0)
+    {
+        <script>
+            (function () {
+                const formulario = document.getElementById("formOferta");
+                const precios = formulario.querySelectorAll(".precio-unitario");
+                const total = document.getElementById("totalOferta");
+                const moneda = new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" });
+
+                function actualizar() {
+                    let acumulado = 0;
+                    for (const campo of precios) {
+                        const precio = Number(campo.value.trim().replace(",", "."));
+                        if (Number.isFinite(precio) && precio > 0) {
+                            acumulado += Math.round(precio * Number(campo.dataset.cantidad) * 100) / 100;
+                        }
+                    }
+                    total.value = moneda.format(acumulado);
+                }
+
+                formulario.addEventListener("input", actualizar);
+                actualizar();
+            })();
+        </script>
+    }
+}

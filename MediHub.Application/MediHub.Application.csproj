@@ -99,6 +99,12 @@
     <Compile Include="Validators\LicitacionDtoValidator.cs" />
     <Compile Include="Validators\ProveedorDtoValidator.cs" />
     <Compile Include="Validators\UsuarioDtoValidator.cs" />
+    <Compile Include="DTOs\ComparacionOfertasDto.cs" />
+    <Compile Include="DTOs\PortalProveedorDto.cs" />
+    <Compile Include="Interfaces\IPortalOfertasService.cs" />
+    <Compile Include="Interfaces\ITerminosLicitacion.cs" />
+    <Compile Include="Services\PortalOfertasService.cs" />
+    <Compile Include="Services\TerminosLicitacionBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -11,6 +11,11 @@ namespace MediHub.Application
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<Services.TerminosLicitacionBase>()
+                .As<Interfaces.ITerminosLicitacion>()
+                .PreserveExistingDefaults()
+                .SingleInstance();
+
             var ensamblado = ThisAssembly;
 
             builder.RegisterAssemblyTypes(ensamblado)
