@@ -85,7 +85,7 @@ Las columnas de `ConfiguracionProveedor`, `ReporteMensual` y `Usuario` siguen lo
 `int` para la comisión, `decimal` para los montos, `varchar` con las longitudes indicadas y `bit` para el estado.
 
 
-## Avance 3 · Persona 5
+## Avance 3 · Fabián Mora C.
 
 El proveedor entra por **Inicio → Licitaciones vigentes**. Puede consultar cada compra abierta y presentar una oferta con precio unitario y vencimiento por ítem, plazo de entrega y monto total. La cuenta autenticada determina a qué proveedor pertenece la oferta. El servidor comprueba el plazo, las cantidades de la licitación y la existencia de ofertas previas antes de guardar.
 
