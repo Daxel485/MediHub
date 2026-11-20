@@ -186,6 +186,7 @@
     <Content Include="Views\Reportes\Index.cshtml" />
     <Content Include="Views\Shared\_Alertas.cshtml" />
     <Content Include="Views\Shared\_Estado.cshtml" />
+    <Content Include="Views\Shared\_EstadoLicitacion.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Usuarios\_CamposUsuario.cshtml" />

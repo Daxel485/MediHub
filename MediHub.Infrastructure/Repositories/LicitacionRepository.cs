@@ -29,6 +29,12 @@ namespace MediHub.Infrastructure.Repositories
                 .SingleOrDefault(l => l.IdLicitacion == idLicitacion);
         }
 
+        public Licitacion ObtenerParaActualizar(int idLicitacion)
+        {
+            return _contexto.Licitaciones.Include("Ofertas.Proveedor")
+                .SingleOrDefault(l => l.IdLicitacion == idLicitacion);
+        }
+
         public bool ExisteTitulo(string titulo)
         {
             return _contexto.Licitaciones.Any(l => l.Titulo == titulo);
@@ -37,6 +43,11 @@ namespace MediHub.Infrastructure.Repositories
         public void Agregar(Licitacion licitacion)
         {
             _contexto.Licitaciones.Add(licitacion);
+            _contexto.SaveChanges();
+        }
+
+        public void Actualizar(Licitacion licitacion)
+        {
             _contexto.SaveChanges();
         }
 

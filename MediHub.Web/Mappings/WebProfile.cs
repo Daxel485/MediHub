@@ -43,7 +43,15 @@ namespace MediHub.Web.Mappings
                 .ForMember(d => d.FechaDeRegistro, o => o.Ignore())
                 .ForMember(d => d.Estado, o => o.Ignore())
                 .ForMember(d => d.CantidadDeOfertas, o => o.Ignore())
-                .ForMember(d => d.OfertasPendientes, o => o.Ignore());
+                .ForMember(d => d.OfertasPendientes, o => o.Ignore())
+                .ForMember(d => d.EstadoDelProceso, o => o.Ignore())
+                .ForMember(d => d.EstadoDelProcesoDescripcion, o => o.Ignore())
+                .ForMember(d => d.IdOfertaAdjudicada, o => o.Ignore())
+                .ForMember(d => d.PuedePublicar, o => o.Ignore())
+                .ForMember(d => d.PuedeIniciarEvaluacion, o => o.Ignore())
+                .ForMember(d => d.PuedeAdjudicar, o => o.Ignore())
+                .ForMember(d => d.PuedeCerrar, o => o.Ignore())
+                .ForMember(d => d.PermiteSincronizarOfertas, o => o.Ignore());
         }
     }
 }

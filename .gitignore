@@ -18,5 +18,8 @@ packages/
 App_Data/*.mdf
 App_Data/*.ldf
 
+## Correos de notificación generados en desarrollo
+App_Data/Correos/
+
 ## Pruebas
 TestResults/

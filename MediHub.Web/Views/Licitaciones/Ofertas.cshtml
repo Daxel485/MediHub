@@ -1,13 +1,45 @@
 @model MediHub.Web.ViewModels.LicitacionOfertasViewModel
 @{
     ViewBag.Title = "Ofertas · " + Model.Licitacion.Titulo;
+    var licitacion = Model.Licitacion;
 }
 
 <div class="mb-3">
-    <h1 class="h3 mb-0">@Model.Licitacion.Titulo</h1>
-    <p class="text-muted mb-1">@Model.Licitacion.Descripcion</p>
-    <p class="small mb-1">Cierre: @Model.Licitacion.FechaDeCierre.ToString("dd/MM/yyyy")</p>
+    <h1 class="h3 mb-0">@licitacion.Titulo @Html.Partial("_EstadoLicitacion", licitacion)</h1>
+    <p class="text-muted mb-1">@licitacion.Descripcion</p>
+    <p class="small mb-1">Cierre: @licitacion.FechaDeCierre.ToString("dd/MM/yyyy")</p>
     @Html.ActionLink("← Volver a licitaciones", "Index", null, new { @class = "small" })
+</div>
+
+@* Las acciones visibles dependen del estado actual de la licitación (patrón State). *@
+<div class="d-flex flex-wrap gap-2 mb-4">
+    @if (licitacion.PuedePublicar)
+    {
+        using (Html.BeginForm("Publicar", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">Publicar y notificar a proveedores</button>
+        }
+    }
+    @if (licitacion.PuedeIniciarEvaluacion)
+    {
+        using (Html.BeginForm("IniciarEvaluacion", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning">Pasar a evaluación</button>
+        }
+    }
+    @if (licitacion.PuedeCerrar)
+    {
+        using (Html.BeginForm("Cerrar", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger"
+                    onclick="return confirm('¿Desea cerrar la licitación? Esta acción no se puede deshacer.');">
+                Cerrar licitación
+            </button>
+        }
+    }
 </div>
 
 @if (!Model.Ofertas.Any())
@@ -45,18 +77,37 @@ else
                             {
                                 <span class="badge text-bg-warning">No sincronizada</span>
                             }
+                            @if (licitacion.IdOfertaAdjudicada == oferta.IdOferta)
+                            {
+                                <span class="badge text-bg-primary">Adjudicada</span>
+                            }
                         </td>
                         <td>
-                            @if (!oferta.Sincronizada)
-                            {
-                                using (Html.BeginForm("Sincronizar", "Licitaciones", FormMethod.Post))
+                            <div class="d-flex gap-2">
+                                @if (!oferta.Sincronizada && licitacion.PermiteSincronizarOfertas)
                                 {
-                                    @Html.AntiForgeryToken()
-                                    @Html.Hidden("idOferta", oferta.IdOferta)
-                                    @Html.Hidden("idLicitacion", oferta.IdLicitacion)
-                                    <button type="submit" class="btn btn-sm btn-primary">Sincronizar</button>
+                                    using (Html.BeginForm("Sincronizar", "Licitaciones", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("idOferta", oferta.IdOferta)
+                                        @Html.Hidden("idLicitacion", oferta.IdLicitacion)
+                                        <button type="submit" class="btn btn-sm btn-primary">Sincronizar</button>
+                                    }
                                 }
-                            }
+                                @if (oferta.Sincronizada && licitacion.PuedeAdjudicar)
+                                {
+                                    using (Html.BeginForm("Adjudicar", "Licitaciones", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("idOferta", oferta.IdOferta)
+                                        @Html.Hidden("idLicitacion", oferta.IdLicitacion)
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('¿Adjudicar la licitación a esta oferta? Se notificará a todos los oferentes.');">
+                                            Adjudicar
+                                        </button>
+                                    }
+                                }
+                            </div>
                         </td>
                     </tr>
                 }
