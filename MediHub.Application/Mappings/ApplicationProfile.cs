@@ -38,6 +38,8 @@ namespace MediHub.Application.Mappings
                 .ForMember(d => d.FechaDeModificacion, o => o.Ignore())
                 .ForMember(d => d.Ofertas, o => o.Ignore());
 
+            CreateMap<Licitacion, LicitacionVigenteDto>();
+            CreateMap<DetalleOferta, DetalleOfertaDto>();
             CreateMap<Oferta, OfertaDto>()
                 .ForMember(d => d.NombreProveedor, o => o.MapFrom(s => s.Proveedor.Nombre));
         }

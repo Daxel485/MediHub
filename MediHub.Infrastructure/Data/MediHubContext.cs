@@ -18,6 +18,7 @@ namespace MediHub.Infrastructure.Data
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Licitacion> Licitaciones { get; set; }
         public DbSet<Oferta> Ofertas { get; set; }
+        public DbSet<Adjudicacion> Adjudicaciones { get; set; }
         public DbSet<BitacoraEvento> Bitacora { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -31,6 +32,8 @@ namespace MediHub.Infrastructure.Data
             ConfigurarUsuario(modelBuilder);
             ConfigurarLicitacion(modelBuilder);
             ConfigurarOferta(modelBuilder);
+            ConfigurarDetalles(modelBuilder);
+            ConfigurarAdjudicacion(modelBuilder);
             ConfigurarBitacora(modelBuilder);
         }
 
@@ -98,6 +101,26 @@ namespace MediHub.Infrastructure.Data
             e.Property(o => o.Descripcion).HasMaxLength(500).IsUnicode(false);
             e.HasRequired(o => o.Licitacion).WithMany(l => l.Ofertas).HasForeignKey(o => o.IdLicitacion);
             e.HasRequired(o => o.Proveedor).WithMany(p => p.Ofertas).HasForeignKey(o => o.IdProveedor);
+        }
+
+        private static void ConfigurarDetalles(DbModelBuilder mb)
+        {
+            var e = mb.Entity<DetalleOferta>();
+            e.ToTable("DetalleOferta").HasKey(d => d.IdDetalleOferta);
+            e.Property(d => d.DescripcionItem).IsRequired().HasMaxLength(500);
+            e.Property(d => d.Cantidad).HasPrecision(18, 4);
+            e.Property(d => d.PrecioUnitario).HasPrecision(18, 2);
+            e.Property(d => d.Puntaje).HasPrecision(7, 4);
+            mb.Entity<Oferta>().HasMany(o => o.Detalles).WithRequired().HasForeignKey(d => d.IdOferta);
+        }
+
+        private static void ConfigurarAdjudicacion(DbModelBuilder mb)
+        {
+            var e = mb.Entity<Adjudicacion>();
+            e.ToTable("Adjudicacion").HasKey(a => a.IdLicitacion);
+            e.Property(a => a.IdLicitacion).HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
+            e.HasRequired(a => a.Licitacion).WithOptional();
+            e.HasRequired(a => a.Oferta).WithMany().HasForeignKey(a => a.IdOferta);
         }
 
         private static void ConfigurarBitacora(DbModelBuilder mb)

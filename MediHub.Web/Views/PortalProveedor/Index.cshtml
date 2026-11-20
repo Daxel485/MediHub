@@ -1,0 +1,24 @@
+@model IEnumerable<MediHub.Application.DTOs.LicitacionVigenteDto>
+@{
+    ViewBag.Title = "Licitaciones vigentes";
+}
+
+<h1 class="h3 mb-3">Licitaciones vigentes</h1>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">Por el momento no hay licitaciones que reciban ofertas.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var licitacion in Model)
+        {
+            <a href="@Url.Action("Detalle", new { id = licitacion.IdLicitacion })" class="list-group-item list-group-item-action">
+                <h2 class="h6 mb-1">@licitacion.Titulo</h2>
+                <p class="mb-1">@licitacion.Descripcion</p>
+                <span class="small text-muted">Recibe ofertas hasta el @licitacion.FechaDeCierre.ToString("dd/MM/yyyy HH:mm")</span>
+            </a>
+        }
+    </div>
+}
