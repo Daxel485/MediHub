@@ -1,0 +1,59 @@
+@model MediHub.Application.DTOs.LicitacionDto
+@{
+    ViewBag.Title = "Detalle de licitacion";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">@Model.Titulo</h1>
+    @Html.ActionLink("Volver", "Index", null, new { @class = "btn btn-outline-secondary" })
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <dl class="row">
+            <dt class="col-sm-4">Descripcion</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Descripcion) ? "-" : Model.Descripcion)</dd>
+
+            <dt class="col-sm-4">Fecha de cierre</dt>
+            <dd class="col-sm-8">@Model.FechaDeCierre.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-4">Estado</dt>
+            <dd class="col-sm-8">@Html.Partial("_Estado", Model.Estado)</dd>
+
+            <dt class="col-sm-4">Terminos de referencia</dt>
+            <dd class="col-sm-8">
+                @if (!string.IsNullOrEmpty(Model.RutaTerminos))
+                {
+                    <span class="badge text-bg-success">PDF cargado</span>
+                }
+                else
+                {
+                    <span class="text-muted">Sin archivo</span>
+                }
+            </dd>
+        </dl>
+    </div>
+
+    @if (Model.Estado)
+    {
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Subir terminos (PDF)</h6>
+                    @using (Html.BeginForm("SubirTerminos", "Licitaciones", new { id = Model.IdLicitacion },
+                        FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <input type="file" name="archivo" accept=".pdf" class="form-control form-control-sm" />
+                            <small class="text-muted">Maximo 5 MB</small>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">Subir</button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@Html.Partial("_ItemsLicitacion", Model)

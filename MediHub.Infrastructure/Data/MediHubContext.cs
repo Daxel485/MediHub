@@ -17,6 +17,7 @@ namespace MediHub.Infrastructure.Data
         public DbSet<ReporteMensual> Reportes { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Licitacion> Licitaciones { get; set; }
+        public DbSet<ItemLicitacion> ItemsLicitacion { get; set; }
         public DbSet<Oferta> Ofertas { get; set; }
         public DbSet<Adjudicacion> Adjudicaciones { get; set; }
         public DbSet<BitacoraEvento> Bitacora { get; set; }
@@ -35,6 +36,7 @@ namespace MediHub.Infrastructure.Data
             ConfigurarDetalles(modelBuilder);
             ConfigurarAdjudicacion(modelBuilder);
             ConfigurarBitacora(modelBuilder);
+            ConfigurarItemLicitacion(modelBuilder);
         }
 
         private static IndexAnnotation IndiceUnico(string nombre)
@@ -91,6 +93,17 @@ namespace MediHub.Infrastructure.Data
             e.Property(l => l.Titulo).IsRequired().HasMaxLength(150).IsUnicode(false)
                 .HasColumnAnnotation(IndexAnnotation.AnnotationName, IndiceUnico("IX_Licitacion_Titulo"));
             e.Property(l => l.Descripcion).HasMaxLength(500).IsUnicode(false);
+            e.Property(l => l.RutaTerminos).HasMaxLength(500).IsUnicode(false);
+        }
+
+        private static void ConfigurarItemLicitacion(DbModelBuilder mb)
+        {
+            var e = mb.Entity<ItemLicitacion>();
+            e.ToTable("ItemLicitacion").HasKey(i => i.IdItemLicitacion);
+            e.Property(i => i.Descripcion).IsRequired().HasMaxLength(500).IsUnicode(false);
+            e.Property(i => i.Unidad).IsRequired().HasMaxLength(50).IsUnicode(false);
+            e.Property(i => i.CantidadRequerida).HasPrecision(18, 4);
+            e.HasRequired(i => i.Licitacion).WithMany(l => l.Items).HasForeignKey(i => i.IdLicitacion);
         }
 
         private static void ConfigurarOferta(DbModelBuilder mb)

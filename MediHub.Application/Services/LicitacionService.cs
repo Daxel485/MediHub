@@ -15,6 +15,7 @@ namespace MediHub.Application.Services
     {
         private const string TablaLicitacion = "Licitacion";
         private const string TablaOferta = "Oferta";
+        private const string TablaItem = "ItemLicitacion";
 
         private readonly ILicitacionRepository _repositorio;
         private readonly IValidator<LicitacionDto> _validador;
@@ -49,7 +50,7 @@ namespace MediHub.Application.Services
                 if (!validacion.IsValid) return Resultado.Invalido(validacion);
 
                 if (_repositorio.ExisteTitulo(dto.Titulo))
-                    return Resultado.Fallido("Ya existe una licitación con el título \"" + dto.Titulo + "\".");
+                    return Resultado.Fallido("Ya existe una licitacion con el titulo \"" + dto.Titulo + "\".");
 
                 var licitacion = _mapper.Map<Licitacion>(dto);
                 licitacion.FechaDeRegistro = _clock.Ahora;
@@ -57,7 +58,7 @@ namespace MediHub.Application.Services
                 _repositorio.Agregar(licitacion);
 
                 Bitacora.RegistrarEvento(TablaLicitacion, TipoEvento.Registrar,
-                    "Se registró la licitación " + licitacion.Titulo + ".",
+                    "Se registro la licitacion " + licitacion.Titulo + ".",
                     datosPosteriores: new
                     {
                         licitacion.IdLicitacion,
@@ -67,7 +68,64 @@ namespace MediHub.Application.Services
                         licitacion.FechaDeRegistro,
                         licitacion.Estado
                     });
-                return Resultado.Correcto("Licitación registrada correctamente.");
+                return Resultado.Correcto("Licitacion registrada correctamente.");
+            });
+        }
+
+        public Resultado ActualizarTerminos(int idLicitacion, string rutaPdf)
+        {
+            return Ejecutar(TablaLicitacion, () =>
+            {
+                var licitacion = _repositorio.ObtenerPorId(idLicitacion);
+                if (licitacion == null) return Resultado.Fallido("La licitacion no existe.");
+
+                // Puente para Persona 3: solo se permite si la licitacion esta activa.
+                if (!licitacion.Estado)
+                    return Resultado.Fallido("No se puede modificar una licitacion cerrada.");
+
+                licitacion.RutaTerminos = rutaPdf;
+                _repositorio.Actualizar(licitacion);
+                return Resultado.Correcto("Terminos de referencia actualizados.");
+            });
+        }
+
+        public Resultado AgregarItem(ItemLicitacionDto dto)
+        {
+            return Ejecutar(TablaItem, () =>
+            {
+                var licitacion = _repositorio.ObtenerPorId(dto.IdLicitacion);
+                if (licitacion == null) return Resultado.Fallido("La licitacion no existe.");
+
+                if (!licitacion.Estado)
+                    return Resultado.Fallido("No se pueden agregar items a una licitacion cerrada.");
+
+                var item = _mapper.Map<ItemLicitacion>(dto);
+                item.IdItemLicitacion = 0;
+                _repositorio.AgregarItem(item);
+
+                Bitacora.RegistrarEvento(TablaItem, TipoEvento.Registrar,
+                    "Se agrego el item \"" + item.Descripcion + "\" a la licitacion " + dto.IdLicitacion + ".",
+                    datosPosteriores: new { item.IdItemLicitacion, item.Descripcion, item.CantidadRequerida });
+                return Resultado.Correcto("Item agregado correctamente.");
+            });
+        }
+
+        public Resultado EliminarItem(int idItem)
+        {
+            return Ejecutar(TablaItem, () =>
+            {
+                var item = _repositorio.ObtenerItem(idItem);
+                if (item == null) return Resultado.Fallido("El item no existe.");
+
+                var licitacion = _repositorio.ObtenerPorId(item.IdLicitacion);
+                if (licitacion != null && !licitacion.Estado)
+                    return Resultado.Fallido("No se pueden eliminar items de una licitacion cerrada.");
+
+                Bitacora.RegistrarEvento(TablaItem, TipoEvento.Eliminar,
+                    "Se elimino el item \"" + item.Descripcion + "\" (id=" + idItem + ").",
+                    datosAnteriores: new { item.IdItemLicitacion, item.Descripcion });
+                _repositorio.EliminarItem(item);
+                return Resultado.Correcto("Item eliminado.");
             });
         }
 
@@ -95,7 +153,7 @@ namespace MediHub.Application.Services
 
                 _repositorio.ActualizarOferta(oferta);
                 Bitacora.RegistrarEvento(TablaOferta, TipoEvento.Editar,
-                    "Se sincronizó la oferta " + oferta.IdOferta + ".",
+                    "Se sincronizo la oferta " + oferta.IdOferta + ".",
                     new { oferta.IdOferta, Sincronizada = false },
                     new { oferta.IdOferta, Sincronizada = true });
                 return Resultado.Correcto("Oferta sincronizada correctamente.");

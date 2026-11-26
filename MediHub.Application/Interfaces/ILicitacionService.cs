@@ -9,7 +9,12 @@ namespace MediHub.Application.Interfaces
         IReadOnlyList<LicitacionDto> ObtenerTodas();
         LicitacionDto ObtenerPorId(int idLicitacion);
         Resultado Registrar(LicitacionDto licitacion);
+        Resultado ActualizarTerminos(int idLicitacion, string rutaPdf);
         IReadOnlyList<OfertaDto> ObtenerOfertas(int idLicitacion);
         Resultado SincronizarOferta(int idOferta);
+
+        // Items
+        Resultado AgregarItem(ItemLicitacionDto item);
+        Resultado EliminarItem(int idItem);
     }
 }

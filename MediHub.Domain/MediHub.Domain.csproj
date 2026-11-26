@@ -40,6 +40,7 @@
     <Compile Include="Entities\BitacoraEvento.cs" />
     <Compile Include="Entities\ConfiguracionProveedor.cs" />
     <Compile Include="Entities\Licitacion.cs" />
+    <Compile Include="Entities\ItemLicitacion.cs" />
     <Compile Include="Entities\Oferta.cs" />
     <Compile Include="Entities\Proveedor.cs" />
     <Compile Include="Entities\ReporteMensual.cs" />

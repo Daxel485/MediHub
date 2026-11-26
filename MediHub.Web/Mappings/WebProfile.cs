@@ -43,7 +43,11 @@ namespace MediHub.Web.Mappings
                 .ForMember(d => d.FechaDeRegistro, o => o.Ignore())
                 .ForMember(d => d.Estado, o => o.Ignore())
                 .ForMember(d => d.CantidadDeOfertas, o => o.Ignore())
-                .ForMember(d => d.OfertasPendientes, o => o.Ignore());
+                .ForMember(d => d.OfertasPendientes, o => o.Ignore())
+                .ForMember(d => d.RutaTerminos, o => o.Ignore())
+                .ForMember(d => d.Items, o => o.Ignore());
+
+            CreateMap<ItemLicitacionViewModel, ItemLicitacionDto>();
         }
     }
 }

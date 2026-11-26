@@ -155,6 +155,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewModels\ConfiguracionFormViewModel.cs" />
     <Compile Include="ViewModels\LicitacionFormViewModel.cs" />
+    <Compile Include="ViewModels\ItemLicitacionViewModel.cs" />
     <Compile Include="ViewModels\LicitacionOfertasViewModel.cs" />
     <Compile Include="ViewModels\ProveedorFormViewModel.cs" />
     <Compile Include="ViewModels\UsuarioFormViewModel.cs" />
@@ -182,6 +183,8 @@
     <Content Include="Views\Configuraciones\Index.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Licitaciones\Crear.cshtml" />
+    <Content Include="Views\Licitaciones\Detalle.cshtml" />
+    <Content Include="Views\Licitaciones\_ItemsLicitacion.cshtml" />
     <Content Include="Views\Licitaciones\Index.cshtml" />
     <Content Include="Views\Licitaciones\Ofertas.cshtml" />
     <Content Include="Views\Proveedores\Crear.cshtml" />

@@ -13,6 +13,9 @@ namespace MediHub.Domain.Entities
         public DateTime? FechaDeModificacion { get; set; }
         public bool Estado { get; set; }
 
+        public string RutaTerminos { get; set; }
+
         public virtual ICollection<Oferta> Ofertas { get; set; } = new List<Oferta>();
+        public virtual ICollection<ItemLicitacion> Items { get; set; } = new List<ItemLicitacion>();
     }
 }

@@ -38,7 +38,10 @@
                         }
                     </td>
                     <td>@Html.Partial("_Estado", licitacion.Estado)</td>
-                    <td>@Html.ActionLink("Ver ofertas", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
+                    <td>
+                        @Html.ActionLink("Ver detalle", "Detalle", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-secondary" })
+                        @Html.ActionLink("Ver ofertas", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })
+                    </td>
                 </tr>
             }
         </tbody>

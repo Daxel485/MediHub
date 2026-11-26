@@ -4,7 +4,7 @@
 
 <div class="py-4">
     <h1 class="h2">MediHub</h1>
-    <p class="lead text-muted">Plataforma de abastecimiento y licitaciones de la Clínica Integral San Rafael.</p>
+    <p class="lead text-muted">Plataforma de abastecimiento y licitaciones de la Clinica Integral San Rafael.</p>
 </div>
 
 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
@@ -12,7 +12,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Proveedores</h2>
-                <p class="card-text">Droguerías, distribuidores y laboratorios afiliados, y la configuración de cada uno.</p>
+                <p class="card-text">Droguerias, distribuidores y laboratorios afiliados, y la configuracion de cada uno.</p>
                 @Html.ActionLink("Ver proveedores", "Index", "Proveedores", null, new { @class = "btn btn-primary" })
             </div>
         </div>
@@ -21,15 +21,8 @@
         <div class="card h-100">
             <div class="card-body">
                 <h2 class="h5 card-title">Licitaciones</h2>
-                <p class="card-text">Licitaciones publicadas y sincronización de las ofertas recibidas.</p>
-                @if (User.IsInRole("Proveedor"))
-                {
-                    @Html.ActionLink("Licitaciones vigentes", "Index", "PortalProveedor", null, new { @class = "btn btn-primary" })
-                }
-                else if (User.IsInRole("Comprador"))
-                {
-                    @Html.ActionLink("Gestionar licitaciones", "Index", "Licitaciones", null, new { @class = "btn btn-primary" })
-                }
+                <p class="card-text">Licitaciones publicadas y sincronizacion de las ofertas recibidas.</p>
+                @Html.ActionLink("Ver licitaciones", "Index", "Licitaciones", null, new { @class = "btn btn-primary" })
             </div>
         </div>
     </div>

@@ -75,6 +75,7 @@
     <Compile Include="Common\TipoConfiguracionExtensions.cs" />
     <Compile Include="DTOs\ConfiguracionProveedorDto.cs" />
     <Compile Include="DTOs\LicitacionDto.cs" />
+    <Compile Include="DTOs\ItemLicitacionDto.cs" />
     <Compile Include="DTOs\OfertaDto.cs" />
     <Compile Include="DTOs\ProveedorDto.cs" />
     <Compile Include="DTOs\ReporteMensualDto.cs" />

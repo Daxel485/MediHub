@@ -1,0 +1,96 @@
+@model MediHub.Application.DTOs.LicitacionDto
+@{
+    // Partial reutilizable: tabla de items + formulario para agregar.
+}
+
+<h4 class="mt-4 mb-3">Items de la licitacion</h4>
+
+@if (Model.Items != null && Model.Items.Count > 0)
+{
+    <div class="table-responsive mb-4">
+        <table class="table table-sm table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Descripcion</th>
+                    <th class="text-end">Cantidad</th>
+                    <th>Unidad</th>
+                    <th class="text-end">Vida util (m)</th>
+                    <th>Cadena de frio</th>
+                    @if (Model.Estado)
+                    {
+                        <th></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.Descripcion</td>
+                        <td class="text-end">@item.CantidadRequerida.ToString("N4")</td>
+                        <td>@item.Unidad</td>
+                        <td class="text-end">@item.VidaUtilMeses</td>
+                        <td>@(item.RequiereCadenaFrio ? "Si" : "No")</td>
+                        @if (Model.Estado)
+                        {
+                            <td>
+                                @using (Html.BeginForm("EliminarItem", "Licitaciones", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="idItem" value="@item.IdItemLicitacion" />
+                                    <input type="hidden" name="idLicitacion" value="@Model.IdLicitacion" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Eliminar este item?')">Eliminar</button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted">No hay items registrados.</p>
+}
+
+@if (Model.Estado)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="card-title">Agregar item</h6>
+            @using (Html.BeginForm("AgregarItem", "Licitaciones", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IdLicitacion" value="@Model.IdLicitacion" />
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label">Descripcion</label>
+                        <input type="text" name="Descripcion" class="form-control form-control-sm" maxlength="500" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" name="CantidadRequerida" class="form-control form-control-sm"
+                               step="0.0001" min="0.0001" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Unidad</label>
+                        <input type="text" name="Unidad" class="form-control form-control-sm" maxlength="50" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Vida util (meses)</label>
+                        <input type="number" name="VidaUtilMeses" class="form-control form-control-sm" min="1" required />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="form-check me-3">
+                            <input class="form-check-input" type="checkbox" name="RequiereCadenaFrio" value="true" id="cadenaFrio" />
+                            <label class="form-check-label" for="cadenaFrio">Cadena de frio</label>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary">Agregar</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

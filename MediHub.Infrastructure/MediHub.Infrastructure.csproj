@@ -89,6 +89,10 @@
       <DependentUpon>202610300431061_CrearMediHub.cs</DependentUpon>
     </Compile>
     <Compile Include="Repositories\PortalOfertasRepository.cs" />
+    <Compile Include="Migrations\202611201800000_ItemsYTerminosLicitacion.cs" />
+    <Compile Include="Migrations\202611201800000_ItemsYTerminosLicitacion.Designer.cs">
+      <DependentUpon>202611201800000_ItemsYTerminosLicitacion.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202611201400000_PortalOfertas.resx">

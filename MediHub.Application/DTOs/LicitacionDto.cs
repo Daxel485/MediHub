@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MediHub.Application.DTOs
 {
@@ -12,5 +13,7 @@ namespace MediHub.Application.DTOs
         public bool Estado { get; set; }
         public int CantidadDeOfertas { get; set; }
         public int OfertasPendientes { get; set; }
+        public string RutaTerminos { get; set; }
+        public IList<ItemLicitacionDto> Items { get; set; } = new List<ItemLicitacionDto>();
     }
 }

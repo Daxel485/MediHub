@@ -5,10 +5,10 @@ namespace MediHub.Infrastructure.Data
 {
     public static class BaseDeDatos
     {
-        // Crea la base o aplica las migraciones pendientes la primera vez que se usa el contexto.
         public static void Inicializar()
         {
-            Database.SetInitializer(new MigrateDatabaseToLatestVersion<MediHubContext, Configuration>());
+            // Migraciones aplicadas manualmente; se desactiva la validacion automatica del modelo.
+            Database.SetInitializer<MediHubContext>(null);
         }
     }
 }

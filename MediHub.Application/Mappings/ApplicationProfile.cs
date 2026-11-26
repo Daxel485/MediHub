@@ -36,7 +36,12 @@ namespace MediHub.Application.Mappings
                     o => o.MapFrom(s => s.Ofertas.Count(of => !of.Sincronizada)));
             CreateMap<LicitacionDto, Licitacion>()
                 .ForMember(d => d.FechaDeModificacion, o => o.Ignore())
-                .ForMember(d => d.Ofertas, o => o.Ignore());
+                .ForMember(d => d.Ofertas, o => o.Ignore())
+                .ForMember(d => d.Items, o => o.Ignore());
+
+            CreateMap<ItemLicitacion, ItemLicitacionDto>();
+            CreateMap<ItemLicitacionDto, ItemLicitacion>()
+                .ForMember(d => d.Licitacion, o => o.Ignore());
 
             CreateMap<Licitacion, LicitacionVigenteDto>();
             CreateMap<DetalleOferta, DetalleOfertaDto>();
