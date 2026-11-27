@@ -38,7 +38,7 @@
                             <span>0</span>
                         }
                     </td>
-                    <td>@Html.Partial("_EstadoLicitacion", licitacion)</td>
+                    <td>@Html.Partial("_EstadoLicitacion", licitacion.EstadoDelProceso)</td>
                     <td>@Html.Partial("_Estado", licitacion.Estado)</td>
                     <td>@Html.ActionLink("Gestionar", "Ofertas", new { id = licitacion.IdLicitacion }, new { @class = "btn btn-sm btn-outline-primary" })</td>
                 </tr>

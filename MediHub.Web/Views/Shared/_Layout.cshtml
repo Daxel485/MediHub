@@ -18,7 +18,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">@Html.ActionLink("Proveedores", "Index", "Proveedores", null, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("Configuraciones", "Index", "Configuraciones", null, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", "Licitaciones", null, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", User.IsInRole("Proveedor") ? "PortalProveedor" : "Licitaciones", null, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("Usuarios", "Index", "Usuarios", null, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("Reportes", "Index", "Reportes", null, new { @class = "nav-link" })</li>
                 </ul>

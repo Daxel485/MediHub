@@ -17,7 +17,6 @@ namespace MediHub.Application.DTOs
         // Ciclo de vida. Las acciones disponibles las decide el estado actual (patrón State).
         public EstadoLicitacion EstadoDelProceso { get; set; }
         public string EstadoDelProcesoDescripcion { get; set; }
-        public int? IdOfertaAdjudicada { get; set; }
         public bool PuedePublicar { get; set; }
         public bool PuedeIniciarEvaluacion { get; set; }
         public bool PuedeAdjudicar { get; set; }

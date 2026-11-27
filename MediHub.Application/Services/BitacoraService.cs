@@ -28,15 +28,21 @@ namespace MediHub.Application.Services
         public void RegistrarEvento(string tabla, TipoEvento tipo, string descripcion,
             object datosAnteriores = null, object datosPosteriores = null)
         {
-            Guardar(new BitacoraEvento
+            Guardar(CrearEvento(tabla, tipo, descripcion, _clock.Ahora, datosAnteriores, datosPosteriores));
+        }
+
+        internal static BitacoraEvento CrearEvento(string tabla, TipoEvento tipo, string descripcion,
+            DateTime fecha, object datosAnteriores, object datosPosteriores)
+        {
+            return new BitacoraEvento
             {
                 TablaDeEvento = tabla,
                 TipoDeEvento = tipo.ToString(),
-                FechaDeEvento = _clock.Ahora,
+                FechaDeEvento = fecha,
                 DescripcionDeEvento = descripcion,
                 DatosAnteriores = Serializar(datosAnteriores),
                 DatosPosteriores = Serializar(datosPosteriores)
-            });
+            };
         }
 
         public void RegistrarError(string tabla, Exception excepcion)

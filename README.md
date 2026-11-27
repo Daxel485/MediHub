@@ -66,7 +66,7 @@ Se accede desde la lista de proveedores (botón **Configuración**) o desde el m
 
 ### Licitaciones: sincronizar ofertas
 
-En **Licitaciones → Gestionar**, cada oferta no sincronizada tiene el botón **Sincronizar**, que cambia su estado a sincronizada.
+Al vencer la recepción, **Licitaciones → Gestionar** permite al comprador sincronizar las ofertas recibidas.
 Una oferta ya sincronizada no se puede volver a sincronizar. El título de la licitación es único.
 Solo se sincronizan ofertas mientras la licitación está *Publicada* o *En evaluación*.
 
@@ -85,10 +85,17 @@ Borrador ──Publicar──▶ Publicada ──Pasar a evaluación──▶ En
   La clase base prohíbe todas las transiciones; cada estado sobrescribe solo las que admite.
 - `Licitacion` guarda la etapa en `EstadoDelProceso` (enum `EstadoLicitacion`, columna `int`) y expone `EstadoActual`.
   `Publicar`, `IniciarEvaluacion`, `Adjudicar` y `Cerrar` delegan en el estado actual.
-- Reglas: solo se publica si la fecha de cierre no ha pasado; solo se evalúa con al menos una oferta;
-  solo se adjudica una oferta sincronizada de la misma licitación (queda en `IdOfertaAdjudicada`); *Cerrada* es final.
-- Una licitación nueva queda en *Borrador*. La migración `CicloDeVidaLicitacion` deja las existentes como *Publicada*.
+- Reglas: solo se publica si la fecha de cierre no ha pasado; solo se pasa a evaluación después del cierre
+  (las ofertas son ciegas) y con al menos una oferta; solo se adjudica una oferta sincronizada de la misma licitación;
+  *Cerrada* es final.
+- Una licitación nueva queda en *Borrador*. La migración `CicloDeVidaLicitacion` deja las existentes como *Publicada*,
+  o *Adjudicada* si ya tienen registro en `Adjudicacion`.
 - Los botones de la vista **Gestionar** dependen de lo que permite el estado (`PuedePublicar`, `PuedeAdjudicar`, ...).
+
+**Integración con el portal de ofertas.** El portal del proveedor solo muestra y acepta ofertas de licitaciones
+*Publicadas*. La sincronización requiere *Publicada* o *En evaluación*. `PortalOfertasService.Adjudicar` pasa por el
+estado (*En evaluación* → *Adjudicada*), guarda la oferta ganadora y el comprador en `Adjudicacion` y, después de
+confirmar la transacción, envía los correos de adjudicación y rechazo.
 
 ### Patrón Factory Method: notificaciones por correo
 
@@ -106,10 +113,11 @@ Borrador ──Publicar──▶ Publicada ──Pasar a evaluación──▶ En
 
 ### Conexión en `LicitacionService`
 
-`Publicar`, `IniciarEvaluacion`, `Adjudicar` y `Cerrar` siguen el mismo flujo: cargar la licitación, delegar la transición
+`Publicar`, `IniciarEvaluacion` y `Cerrar` siguen el mismo flujo: cargar la licitación, delegar la transición
 al estado, guardar, registrar el cambio en la bitácora y enviar las notificaciones con la fábrica correspondiente.
 Una transición no permitida devuelve el mensaje del estado sin guardar nada. Si un correo falla, la transición se conserva,
 el error queda en la bitácora (tabla `Notificacion`) y el mensaje indica cuántos correos no se enviaron.
+`NotificadorLicitacion` decide los destinatarios de cada transición y lo usan `LicitacionService` y `PortalOfertasService`.
 
 En desarrollo, `Web.config` (`system.net/mailSettings`) guarda los correos como archivos `.eml` en `MediHub.Web/App_Data/Correos`.
 Para enviarlos por un servidor SMTP real, cambie `deliveryMethod` a `Network` y configure el elemento `<network>`.
@@ -128,3 +136,18 @@ la descripción y los datos anteriores y posteriores en JSON. Los errores guarda
 `Proveedor`, `ConfiguracionProveedor`, `ReporteMensual`, `Usuario`, `Licitacion`, `Oferta` y `BITACORA_EVENTOS`.
 Las columnas de `ConfiguracionProveedor`, `ReporteMensual` y `Usuario` siguen los tipos del enunciado:
 `int` para la comisión, `decimal` para los montos, `varchar` con las longitudes indicadas y `bit` para el estado.
+
+
+## Avance 3 · Fabián Mora C.
+
+El proveedor entra por **Inicio → Licitaciones vigentes**. Puede consultar cada compra abierta y presentar una oferta con precio unitario y vencimiento por ítem, plazo de entrega y monto total. La cuenta autenticada determina a qué proveedor pertenece la oferta. El servidor comprueba el plazo, las cantidades de la licitación y la existencia de ofertas previas antes de guardar.
+
+El comprador entra por **Licitaciones → Ver ofertas**. Al cumplirse la fecha de cierre, la tabla muestra precios, vencimientos y puntajes por ítem. El comprador confirma una oferta ganadora para toda la licitación. La adjudicación y el evento en `BITACORA_EVENTOS` se guardan en la misma transacción con la oferta, el proveedor, el comprador y la fecha. Los reportes de montos globales requieren el rol Administrador para mantener las ofertas ciegas.
+
+### Integración del grupo
+
+- **Cuentas.** Las acciones usan los roles `Proveedor` y `Comprador`. Para ofertar, el identificador de Identity en `ClaimTypes.NameIdentifier` debe corresponder al `Usuario.IdNetUser` de un usuario y un proveedor activos.
+- **Ítems.** El proyecto base presenta cada licitación como una línea de cantidad uno. Cuando el catálogo esté disponible, su adaptador de `ITerminosLicitacion` podrá proporcionar los ítems en un orden estable y el PDF asociado. El portal ya admite varias líneas y valida sus identificadores al guardar.
+- **Vigencia.** En la base recibida se usan `Licitacion.Estado` y `FechaDeCierre`. La consulta de vigentes y las validaciones de envío, sincronización y adjudicación ya usan las fases del ciclo de vida (ver la sección anterior).
+- **Puntajes.** El comparativo lee `DetalleOferta.Puntaje`. Cada valor aparece como **Pendiente** hasta que el módulo de evaluación lo guarde. Las ofertas históricas del avance anterior conservan el monto global.
+- **Datos.** La migración EF6 `PortalOfertas` agrega el detalle de oferta, el plazo de entrega y la adjudicación. Se aplica mediante el inicializador existente de MediHub.

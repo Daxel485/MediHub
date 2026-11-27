@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using MediHub.Domain.Entities;
 using MediHub.Domain.Enums;
 
@@ -15,17 +14,14 @@ namespace MediHub.Domain.Estados
         public override bool PuedeCerrar => true;
         public override bool PermiteSincronizarOfertas => true;
 
-        public override Oferta Adjudicar(Licitacion licitacion, int idOferta, DateTime ahora)
+        public override void Adjudicar(Licitacion licitacion, Oferta oferta, DateTime ahora)
         {
-            var oferta = licitacion.Ofertas.SingleOrDefault(o => o.IdOferta == idOferta);
-            if (oferta == null)
+            if (oferta == null || oferta.IdLicitacion != licitacion.IdLicitacion)
                 throw new InvalidOperationException("La oferta no pertenece a esta licitación.");
             if (!oferta.Sincronizada)
                 throw new InvalidOperationException("Solo se pueden adjudicar ofertas sincronizadas.");
 
-            licitacion.IdOfertaAdjudicada = oferta.IdOferta;
             CambiarA(licitacion, EstadoLicitacion.Adjudicada, ahora);
-            return oferta;
         }
 
         // Cerrar sin adjudicar declara la licitación desierta.

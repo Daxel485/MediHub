@@ -13,7 +13,7 @@ namespace MediHub.Infrastructure.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "202611201200000_CicloDeVidaLicitacion"; }
+            get { return "202611271200000_CicloDeVidaLicitacion"; }
         }
         
         string IMigrationMetadata.Source

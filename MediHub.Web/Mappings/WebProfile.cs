@@ -46,7 +46,6 @@ namespace MediHub.Web.Mappings
                 .ForMember(d => d.OfertasPendientes, o => o.Ignore())
                 .ForMember(d => d.EstadoDelProceso, o => o.Ignore())
                 .ForMember(d => d.EstadoDelProcesoDescripcion, o => o.Ignore())
-                .ForMember(d => d.IdOfertaAdjudicada, o => o.Ignore())
                 .ForMember(d => d.PuedePublicar, o => o.Ignore())
                 .ForMember(d => d.PuedeIniciarEvaluacion, o => o.Ignore())
                 .ForMember(d => d.PuedeAdjudicar, o => o.Ignore())
