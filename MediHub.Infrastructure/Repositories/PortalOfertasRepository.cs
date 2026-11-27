@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using MediHub.Domain.Entities;
+using MediHub.Domain.Enums;
 using MediHub.Domain.Interfaces;
 using MediHub.Infrastructure.Data;
 
@@ -22,10 +23,11 @@ namespace MediHub.Infrastructure.Repositories
             return _contexto.Licitaciones.AsNoTracking().SingleOrDefault(l => l.IdLicitacion == idLicitacion);
         }
 
+        // Vigente = publicada (patrón State), activa y con la recepción abierta.
         private IQueryable<Licitacion> ConsultarVigentes(DateTime ahora)
         {
             return _contexto.Licitaciones.AsNoTracking()
-                .Where(l => l.Estado && l.FechaDeCierre > ahora
+                .Where(l => l.Estado && l.EstadoDelProceso == EstadoLicitacion.Publicada && l.FechaDeCierre > ahora
                     && !_contexto.Adjudicaciones.Any(a => a.IdLicitacion == l.IdLicitacion));
         }
 

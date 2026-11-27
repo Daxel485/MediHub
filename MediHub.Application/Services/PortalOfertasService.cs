@@ -6,6 +6,7 @@ using AutoMapper;
 using MediHub.Application.Common;
 using MediHub.Application.DTOs;
 using MediHub.Application.Interfaces;
+using MediHub.Application.Notificaciones;
 using MediHub.Domain.Entities;
 using MediHub.Domain.Enums;
 using MediHub.Domain.Interfaces;
@@ -18,14 +19,16 @@ namespace MediHub.Application.Services
         private readonly IMapper _mapper;
         private readonly IClock _clock;
         private readonly ITerminosLicitacion _terminos;
+        private readonly NotificadorLicitacion _notificador;
 
         public PortalOfertasService(IPortalOfertasRepository repositorio, IMapper mapper, IClock clock,
-            ITerminosLicitacion terminos, IBitacoraService bitacora) : base(bitacora)
+            ITerminosLicitacion terminos, IBitacoraService bitacora, NotificadorLicitacion notificador) : base(bitacora)
         {
             _repositorio = repositorio;
             _mapper = mapper;
             _clock = clock;
             _terminos = terminos;
+            _notificador = notificador;
         }
 
         public ComparacionOfertasDto Comparar(int idLicitacion)
@@ -39,13 +42,19 @@ namespace MediHub.Application.Services
             if (cerrada)
                 ofertas = _mapper.Map<List<OfertaDto>>(_repositorio.ObtenerOfertas(idLicitacion));
 
+            var estado = licitacion.EstadoActual;
             return new ComparacionOfertasDto
             {
                 Licitacion = _mapper.Map<LicitacionVigenteDto>(licitacion),
                 RecepcionCerrada = cerrada,
-                PuedeAdjudicar = cerrada && licitacion.Estado && !ganadora.HasValue,
+                PuedeAdjudicar = cerrada && licitacion.Estado && !ganadora.HasValue && estado.PuedeAdjudicar,
                 IdOfertaGanadora = ganadora,
-                Ofertas = ofertas
+                Ofertas = ofertas,
+                EstadoDelProceso = licitacion.EstadoDelProceso,
+                PuedePublicar = estado.PuedePublicar,
+                PuedeIniciarEvaluacion = estado.PuedeIniciarEvaluacion && cerrada,
+                PuedeCerrar = estado.PuedeCerrar,
+                PermiteSincronizarOfertas = estado.PermiteSincronizarOfertas && cerrada
             };
         }
 
@@ -53,7 +62,8 @@ namespace MediHub.Application.Services
         {
             if (idComprador == Guid.Empty) return Resultado.Fallido("Se requiere la identidad del comprador.");
 
-            return Modificar(idLicitacion, (licitacion, ahora) =>
+            Licitacion adjudicada = null;
+            var resultado = Modificar(idLicitacion, (licitacion, ahora) =>
             {
                 if (!licitacion.Estado || ahora < licitacion.FechaDeCierre)
                     return Resultado.Fallido("La licitación debe estar activa y haber terminado la recepción de ofertas.");
@@ -62,6 +72,16 @@ namespace MediHub.Application.Services
                 var ganadora = _repositorio.ObtenerOferta(idLicitacion, idOferta);
                 if (ganadora == null)
                     return Resultado.Fallido("La oferta seleccionada no pertenece a la licitación.");
+
+                // El estado valida la transición (solo En evaluación y con oferta sincronizada) y pasa a Adjudicada.
+                try
+                {
+                    licitacion.Adjudicar(ganadora, ahora);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Resultado.Fallido(ex.Message);
+                }
 
                 _repositorio.AgregarAdjudicacion(new Adjudicacion
                 {
@@ -74,8 +94,29 @@ namespace MediHub.Application.Services
                     $"Se adjudicó la licitación {idLicitacion} a la oferta {idOferta}.", ahora, null,
                     new { IdLicitacion = idLicitacion, IdOferta = idOferta, ganadora.IdProveedor,
                         IdComprador = idComprador, FechaDeAdjudicacion = ahora }));
+                adjudicada = licitacion;
                 return Resultado.Correcto("La oferta fue adjudicada.");
             });
+
+            // Los correos se envían después de confirmar la transacción, para no avisar una adjudicación revertida.
+            return resultado.Exito ? NotificarAdjudicacion(adjudicada, idOferta, resultado) : resultado;
+        }
+
+        private Resultado NotificarAdjudicacion(Licitacion licitacion, int idOferta, Resultado resultado)
+        {
+            try
+            {
+                var ofertas = _repositorio.ObtenerOfertas(licitacion.IdLicitacion);
+                var ganadora = ofertas.Single(o => o.IdOferta == idOferta);
+                var envio = _notificador.NotificarAdjudicacion(licitacion, ganadora, ofertas);
+                return Resultado.Correcto(resultado.Mensaje + envio.Describir());
+            }
+            catch (Exception ex)
+            {
+                Bitacora.RegistrarError("Notificacion", ex);
+                return Resultado.Correcto(resultado.Mensaje +
+                    " No se pudieron enviar las notificaciones; el detalle quedó registrado en la bitácora.");
+            }
         }
 
         public Resultado Sincronizar(int idLicitacion, int idOferta)
@@ -84,6 +125,9 @@ namespace MediHub.Application.Services
             {
                 if (ahora < licitacion.FechaDeCierre)
                     return Resultado.Fallido("La recepción de ofertas sigue abierta.");
+                if (!licitacion.EstadoActual.PermiteSincronizarOfertas)
+                    return Resultado.Fallido("No se pueden sincronizar ofertas de una licitación en estado "
+                                             + licitacion.EstadoActual.Nombre + ".");
                 var oferta = _repositorio.ObtenerOferta(idLicitacion, idOferta);
                 if (oferta == null) return Resultado.Fallido("La oferta no pertenece a esta licitación.");
                 if (oferta.Sincronizada) return Resultado.Fallido("La oferta ya se encuentra sincronizada.");
@@ -133,7 +177,8 @@ namespace MediHub.Application.Services
             {
                 var proveedor = ProveedorAutorizado(idNetUser);
                 if (!proveedor.HasValue) return Resultado.Fallido("Su cuenta no está asociada a un proveedor activo.");
-                if (!licitacion.Estado || ahora >= licitacion.FechaDeCierre || _repositorio.ObtenerOfertaGanadora(idLicitacion).HasValue)
+                if (!licitacion.Estado || !licitacion.EstadoActual.PermiteRecibirOfertas ||
+                    ahora >= licitacion.FechaDeCierre || _repositorio.ObtenerOfertaGanadora(idLicitacion).HasValue)
                     return Resultado.Fallido("La licitación ya no recibe ofertas.");
                 if (_repositorio.TieneOferta(idLicitacion, proveedor.Value))
                     return Resultado.Fallido("Su proveedor ya presentó una oferta para esta licitación.");

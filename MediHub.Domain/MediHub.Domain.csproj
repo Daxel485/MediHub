@@ -45,8 +45,15 @@
     <Compile Include="Entities\ReporteMensual.cs" />
     <Compile Include="Entities\ResumenMensualProveedor.cs" />
     <Compile Include="Entities\Usuario.cs" />
+    <Compile Include="Enums\EstadoLicitacion.cs" />
     <Compile Include="Enums\TipoConfiguracion.cs" />
     <Compile Include="Enums\TipoEvento.cs" />
+    <Compile Include="Estados\EstadoAdjudicada.cs" />
+    <Compile Include="Estados\EstadoBorrador.cs" />
+    <Compile Include="Estados\EstadoCerrada.cs" />
+    <Compile Include="Estados\EstadoEnEvaluacion.cs" />
+    <Compile Include="Estados\EstadoLicitacionBase.cs" />
+    <Compile Include="Estados\EstadoPublicada.cs" />
     <Compile Include="Interfaces\IBitacoraRepository.cs" />
     <Compile Include="Interfaces\IConfiguracionProveedorRepository.cs" />
     <Compile Include="Interfaces\ILicitacionRepository.cs" />

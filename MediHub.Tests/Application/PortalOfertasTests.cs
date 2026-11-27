@@ -7,6 +7,7 @@ using MediHub.Application.DTOs;
 using MediHub.Application.Interfaces;
 using MediHub.Application.Services;
 using MediHub.Domain.Entities;
+using MediHub.Domain.Enums;
 using MediHub.Domain.Interfaces;
 using MediHub.Tests.Comun;
 using Moq;
@@ -20,9 +21,11 @@ namespace MediHub.Tests.Application
         private static readonly Guid IdNetUser = Guid.Parse("01192CF0-C811-4A26-9E79-023AEEC653A1");
         private readonly Mock<IPortalOfertasRepository> _repositorio = new Mock<IPortalOfertasRepository>();
         private readonly Mock<ITerminosLicitacion> _terminos = new Mock<ITerminosLicitacion>();
+        private readonly Mock<IServicioCorreo> _correo = new Mock<IServicioCorreo>();
         private readonly Licitacion _licitacion = new Licitacion
         {
-            IdLicitacion = 7, Estado = true, FechaDeCierre = Ahora.AddHours(1)
+            IdLicitacion = 7, Titulo = "Guantes de nitrilo", Estado = true, FechaDeCierre = Ahora.AddHours(1),
+            EstadoDelProceso = EstadoLicitacion.Publicada
         };
         private readonly PortalOfertasService _servicio;
 
@@ -32,8 +35,9 @@ namespace MediHub.Tests.Application
             _repositorio.Setup(r => r.ObtenerProveedorAutorizado(IdNetUser)).Returns(9);
             _repositorio.Setup(r => r.EjecutarEnLicitacion(7, It.IsAny<Func<Licitacion, Resultado>>()))
                 .Returns((int id, Func<Licitacion, Resultado> operar) => operar(_licitacion));
+            var bitacora = Mock.Of<IBitacoraService>();
             _servicio = new PortalOfertasService(_repositorio.Object, Mapeador.Crear(), new RelojFijo(Ahora),
-                _terminos.Object, Mock.Of<IBitacoraService>());
+                _terminos.Object, bitacora, Notificador.Crear(_correo.Object, bitacora));
         }
 
         [Fact]
@@ -94,11 +98,23 @@ namespace MediHub.Tests.Application
         }
 
         [Fact]
+        public void Enviar_LicitacionEnBorrador_NoRecibeOfertas()
+        {
+            _licitacion.EstadoDelProceso = EstadoLicitacion.Borrador;
+
+            var resultado = _servicio.EnviarOferta(7, IdNetUser, 4, null, new[] { Detalle(2, 230m) });
+
+            resultado.Exito.Should().BeFalse();
+            _repositorio.Verify(r => r.AgregarOferta(It.IsAny<Oferta>()), Times.Never);
+        }
+
+        [Fact]
         public void Adjudicar_ExigeCierreYPertenencia_YGuardaElGanadorConSuEvento()
         {
             _repositorio.Setup(r => r.ObtenerOferta(7, 11)).Returns(Oferta(11, 9));
             _servicio.Adjudicar(7, 11, IdNetUser).Exito.Should().BeFalse();
             _licitacion.FechaDeCierre = Ahora;
+            _licitacion.EstadoDelProceso = EstadoLicitacion.EnEvaluacion;
             _servicio.Adjudicar(7, 99, IdNetUser).Exito.Should().BeFalse();
             _servicio.Adjudicar(7, 11, IdNetUser).Exito.Should().BeTrue();
             _repositorio.Setup(r => r.ObtenerOfertaGanadora(7)).Returns(11);
@@ -109,6 +125,55 @@ namespace MediHub.Tests.Application
                 a.FechaDeAdjudicacion == Ahora)), Times.Once);
             _repositorio.Verify(r => r.AgregarEvento(It.Is<BitacoraEvento>(e => e.TipoDeEvento == "Adjudicar" &&
                 e.DatosPosteriores.Contains(IdNetUser.ToString()))), Times.Once);
+            _licitacion.EstadoDelProceso.Should().Be(EstadoLicitacion.Adjudicada);
+        }
+
+        [Fact]
+        public void Adjudicar_FueraDeEvaluacion_NoGuardaLaAdjudicacion()
+        {
+            _licitacion.FechaDeCierre = Ahora;
+            _repositorio.Setup(r => r.ObtenerOferta(7, 11)).Returns(Oferta(11, 9));
+
+            var resultado = _servicio.Adjudicar(7, 11, IdNetUser);
+
+            resultado.Exito.Should().BeFalse();
+            resultado.Mensaje.Should().Contain("Publicada");
+            _repositorio.Verify(r => r.AgregarAdjudicacion(It.IsAny<Adjudicacion>()), Times.Never);
+            _correo.Verify(c => c.Enviar(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void Adjudicar_NotificaAlGanadorYRechazaALosDemasUnaVezPorProveedor()
+        {
+            _licitacion.FechaDeCierre = Ahora;
+            _licitacion.EstadoDelProceso = EstadoLicitacion.EnEvaluacion;
+            var ganadora = Oferta(11, 9);
+            _repositorio.Setup(r => r.ObtenerOferta(7, 11)).Returns(ganadora);
+            _repositorio.Setup(r => r.ObtenerOfertas(7)).Returns(new[] { ganadora, Oferta(12, 4), Oferta(13, 4) });
+            var asuntos = new List<(string Destino, string Asunto)>();
+            _correo.Setup(c => c.Enviar(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string, string>((destino, asunto, cuerpo) => asuntos.Add((destino, asunto)));
+
+            var resultado = _servicio.Adjudicar(7, 11, IdNetUser);
+
+            resultado.Exito.Should().BeTrue();
+            resultado.Mensaje.Should().Contain("2 notificaciones");
+            asuntos.Should().HaveCount(2);
+            asuntos.Should().Contain(("proveedor9@example.com", "Licitación adjudicada: Guantes de nitrilo"));
+            asuntos.Should().Contain(("proveedor4@example.com", "Resultado de la licitación: Guantes de nitrilo"));
+        }
+
+        [Fact]
+        public void Comparar_ExponeLasAccionesDelEstado()
+        {
+            _licitacion.FechaDeCierre = Ahora;
+            _repositorio.Setup(r => r.ObtenerOfertas(7)).Returns(Array.Empty<Oferta>());
+
+            var comparacion = _servicio.Comparar(7);
+
+            comparacion.EstadoDelProceso.Should().Be(EstadoLicitacion.Publicada);
+            comparacion.PuedeIniciarEvaluacion.Should().BeTrue();
+            comparacion.PuedeAdjudicar.Should().BeFalse();
         }
 
         [Fact]
@@ -136,8 +201,10 @@ namespace MediHub.Tests.Application
         private static Oferta Oferta(int id, int proveedor) => new Oferta
         {
             IdOferta = id,
+            IdLicitacion = 7,
             IdProveedor = proveedor,
-            Proveedor = new Proveedor { CorreoElectronico = $"proveedor{proveedor}@example.com" }
+            Sincronizada = true,
+            Proveedor = new Proveedor { IdProveedor = proveedor, CorreoElectronico = $"proveedor{proveedor}@example.com" }
         };
     }
 }

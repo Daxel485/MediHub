@@ -33,9 +33,18 @@ namespace MediHub.Application.Mappings
             CreateMap<Licitacion, LicitacionDto>()
                 .ForMember(d => d.CantidadDeOfertas, o => o.MapFrom(s => s.Ofertas.Count))
                 .ForMember(d => d.OfertasPendientes,
-                    o => o.MapFrom(s => s.Ofertas.Count(of => !of.Sincronizada)));
+                    o => o.MapFrom(s => s.Ofertas.Count(of => !of.Sincronizada)))
+                .ForMember(d => d.EstadoDelProcesoDescripcion, o => o.MapFrom(s => s.EstadoActual.Nombre))
+                .ForMember(d => d.PuedePublicar, o => o.MapFrom(s => s.EstadoActual.PuedePublicar))
+                .ForMember(d => d.PuedeIniciarEvaluacion, o => o.MapFrom(s => s.EstadoActual.PuedeIniciarEvaluacion))
+                .ForMember(d => d.PuedeAdjudicar, o => o.MapFrom(s => s.EstadoActual.PuedeAdjudicar))
+                .ForMember(d => d.PuedeCerrar, o => o.MapFrom(s => s.EstadoActual.PuedeCerrar))
+                .ForMember(d => d.PermiteSincronizarOfertas,
+                    o => o.MapFrom(s => s.EstadoActual.PermiteSincronizarOfertas));
+            // El estado del proceso solo cambia mediante las transiciones del dominio.
             CreateMap<LicitacionDto, Licitacion>()
                 .ForMember(d => d.FechaDeModificacion, o => o.Ignore())
+                .ForMember(d => d.EstadoDelProceso, o => o.Ignore())
                 .ForMember(d => d.Ofertas, o => o.Ignore());
 
             CreateMap<Licitacion, LicitacionVigenteDto>();

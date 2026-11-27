@@ -66,8 +66,61 @@ Se accede desde la lista de proveedores (botón **Configuración**) o desde el m
 
 ### Licitaciones: sincronizar ofertas
 
-Al vencer la recepción, **Licitaciones → Ver ofertas** permite al comprador sincronizar las ofertas recibidas.
+Al vencer la recepción, **Licitaciones → Gestionar** permite al comprador sincronizar las ofertas recibidas.
 Una oferta ya sincronizada no se puede volver a sincronizar. El título de la licitación es único.
+Solo se sincronizan ofertas mientras la licitación está *Publicada* o *En evaluación*.
+
+## Avance 3 (Persona 3): ciclo de vida y notificaciones
+
+### Patrón State: estados de la licitación
+
+```
+Borrador ──Publicar──▶ Publicada ──Pasar a evaluación──▶ En evaluación ──Adjudicar──▶ Adjudicada
+    │                      │                                  │                          │
+    └──────────────────────┴──────────────Cerrar──────────────┴──────────────────────────┴──▶ Cerrada
+```
+
+- `MediHub.Domain/Estados`: `EstadoLicitacionBase` (estado abstracto) y un estado concreto por etapa
+  (`EstadoBorrador`, `EstadoPublicada`, `EstadoEnEvaluacion`, `EstadoAdjudicada`, `EstadoCerrada`).
+  La clase base prohíbe todas las transiciones; cada estado sobrescribe solo las que admite.
+- `Licitacion` guarda la etapa en `EstadoDelProceso` (enum `EstadoLicitacion`, columna `int`) y expone `EstadoActual`.
+  `Publicar`, `IniciarEvaluacion`, `Adjudicar` y `Cerrar` delegan en el estado actual.
+- Reglas: solo se publica si la fecha de cierre no ha pasado; solo se pasa a evaluación después del cierre
+  (las ofertas son ciegas) y con al menos una oferta; solo se adjudica una oferta sincronizada de la misma licitación;
+  *Cerrada* es final.
+- Una licitación nueva queda en *Borrador*. La migración `CicloDeVidaLicitacion` deja las existentes como *Publicada*,
+  o *Adjudicada* si ya tienen registro en `Adjudicacion`.
+- Los botones de la vista **Gestionar** dependen de lo que permite el estado (`PuedePublicar`, `PuedeAdjudicar`, ...).
+
+**Integración con el portal de ofertas.** El portal del proveedor solo muestra y acepta ofertas de licitaciones
+*Publicadas*. La sincronización requiere *Publicada* o *En evaluación*. `PortalOfertasService.Adjudicar` pasa por el
+estado (*En evaluación* → *Adjudicada*), guarda la oferta ganadora y el comprador en `Adjudicacion` y, después de
+confirmar la transacción, envía los correos de adjudicación y rechazo.
+
+### Patrón Factory Method: notificaciones por correo
+
+- `MediHub.Application/Notificaciones`: `CreadorDeNotificacion` define `Enviar` (crear y enviar) y el método fábrica
+  abstracto `CrearNotificacion`. Cada creador concreto (`CreadorNotificacionPublicacion`, `CreadorNotificacionAdjudicacion`,
+  `CreadorNotificacionRechazo`) devuelve su producto (`NotificacionPublicacion`, `NotificacionAdjudicacion`, `NotificacionRechazo`).
+- El envío se hace con `IServicioCorreo`, implementado por `ServicioCorreoSmtp` en infraestructura.
+
+| Transición | Correos |
+|---|---|
+| Publicar | Publicación a todos los proveedores activos |
+| Adjudicar | Adjudicación al proveedor ganador y rechazo a los demás oferentes (uno por proveedor) |
+| Cerrar desde *Publicada* o *En evaluación* (desierta) | Rechazo a todos los oferentes |
+| Pasar a evaluación, cerrar un borrador o una adjudicada | Ninguno |
+
+### Conexión en `LicitacionService`
+
+`Publicar`, `IniciarEvaluacion` y `Cerrar` siguen el mismo flujo: cargar la licitación, delegar la transición
+al estado, guardar, registrar el cambio en la bitácora y enviar las notificaciones con la fábrica correspondiente.
+Una transición no permitida devuelve el mensaje del estado sin guardar nada. Si un correo falla, la transición se conserva,
+el error queda en la bitácora (tabla `Notificacion`) y el mensaje indica cuántos correos no se enviaron.
+`NotificadorLicitacion` decide los destinatarios de cada transición y lo usan `LicitacionService` y `PortalOfertasService`.
+
+En desarrollo, `Web.config` (`system.net/mailSettings`) guarda los correos como archivos `.eml` en `MediHub.Web/App_Data/Correos`.
+Para enviarlos por un servidor SMTP real, cambie `deliveryMethod` a `Network` y configure el elemento `<network>`.
 
 ### Bitácora
 
@@ -95,6 +148,6 @@ El comprador entra por **Licitaciones → Ver ofertas**. Al cumplirse la fecha d
 
 - **Cuentas.** Las acciones usan los roles `Proveedor` y `Comprador`. Para ofertar, el identificador de Identity en `ClaimTypes.NameIdentifier` debe corresponder al `Usuario.IdNetUser` de un usuario y un proveedor activos.
 - **Ítems.** El proyecto base presenta cada licitación como una línea de cantidad uno. Cuando el catálogo esté disponible, su adaptador de `ITerminosLicitacion` podrá proporcionar los ítems en un orden estable y el PDF asociado. El portal ya admite varias líneas y valida sus identificadores al guardar.
-- **Vigencia.** En la base recibida se usan `Licitacion.Estado` y `FechaDeCierre`. Al integrar el ciclo de vida del grupo, la consulta de vigentes y las validaciones de envío y adjudicación deben usar las fases equivalentes.
+- **Vigencia.** En la base recibida se usan `Licitacion.Estado` y `FechaDeCierre`. La consulta de vigentes y las validaciones de envío, sincronización y adjudicación ya usan las fases del ciclo de vida (ver la sección anterior).
 - **Puntajes.** El comparativo lee `DetalleOferta.Puntaje`. Cada valor aparece como **Pendiente** hasta que el módulo de evaluación lo guarde. Las ofertas históricas del avance anterior conservan el monto global.
 - **Datos.** La migración EF6 `PortalOfertas` agrega el detalle de oferta, el plazo de entrega y la adjudicación. Se aplica mediante el inicializador existente de MediHub.

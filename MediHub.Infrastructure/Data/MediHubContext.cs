@@ -91,6 +91,8 @@ namespace MediHub.Infrastructure.Data
             e.Property(l => l.Titulo).IsRequired().HasMaxLength(150).IsUnicode(false)
                 .HasColumnAnnotation(IndexAnnotation.AnnotationName, IndiceUnico("IX_Licitacion_Titulo"));
             e.Property(l => l.Descripcion).HasMaxLength(500).IsUnicode(false);
+            // El objeto de estado (patrón State) se deriva de EstadoDelProceso; no es una columna.
+            e.Ignore(l => l.EstadoActual);
         }
 
         private static void ConfigurarOferta(DbModelBuilder mb)

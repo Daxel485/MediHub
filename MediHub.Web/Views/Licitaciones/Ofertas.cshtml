@@ -6,9 +6,38 @@
 
 <div class="mb-4">
     @Html.ActionLink("Volver a licitaciones", "Index")
-    <h1 class="h3 mt-2">@licitacion.Titulo</h1>
+    <h1 class="h3 mt-2">@licitacion.Titulo @Html.Partial("_EstadoLicitacion", Model.EstadoDelProceso)</h1>
     <p>@licitacion.Descripcion</p>
     <p>Fin de recepción el @licitacion.FechaDeCierre.ToString("dd/MM/yyyy HH:mm")</p>
+</div>
+
+@* Las acciones del ciclo de vida dependen del estado actual de la licitación (patrón State). *@
+<div class="d-flex flex-wrap gap-2 mb-4">
+    @if (Model.PuedePublicar)
+    {
+        using (Html.BeginForm("Publicar", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">Publicar y notificar a proveedores</button>
+        }
+    }
+    @if (Model.PuedeIniciarEvaluacion)
+    {
+        using (Html.BeginForm("IniciarEvaluacion", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning">Pasar a evaluación</button>
+        }
+    }
+    @if (Model.PuedeCerrar)
+    {
+        using (Html.BeginForm("Cerrar", "Licitaciones", new { id = licitacion.IdLicitacion }, FormMethod.Post,
+            new { onsubmit = "return confirm('¿Desea cerrar la licitación? Esta acción no se puede deshacer.');" }))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger">Cerrar licitación</button>
+        }
+    }
 </div>
 
 @if (!Model.RecepcionCerrada)
@@ -48,17 +77,17 @@ else
                             {
                                 <span class="badge text-bg-success">Ganadora</span>
                             }
-                            @if (Model.PuedeAdjudicar)
+                            @if (Model.PuedeAdjudicar && oferta.Sincronizada)
                             {
                                 using (Html.BeginForm("Adjudicar", "Licitaciones", new { id = licitacion.IdLicitacion },
-                                    FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('¿Confirma la adjudicación de esta oferta?');" }))
+                                    FormMethod.Post, new { @class = "d-inline", onsubmit = "return confirm('¿Confirma la adjudicación de esta oferta? Se notificará a todos los oferentes.');" }))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="idOferta" value="@oferta.IdOferta" />
                                     <button type="submit" class="btn btn-sm btn-primary">Adjudicar</button>
                                 }
                             }
-                            @if (!oferta.Sincronizada)
+                            @if (!oferta.Sincronizada && Model.PermiteSincronizarOfertas)
                             {
                                 using (Html.BeginForm("Sincronizar", "Licitaciones", FormMethod.Post, new { @class = "d-inline" }))
                                 {

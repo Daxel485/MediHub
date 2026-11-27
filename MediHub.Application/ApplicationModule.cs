@@ -3,6 +3,7 @@ using Autofac;
 using AutoMapper;
 using FluentValidation;
 using MediHub.Application.Mappings;
+using MediHub.Application.Notificaciones;
 
 namespace MediHub.Application
 {
@@ -22,6 +23,13 @@ namespace MediHub.Application
                 .Where(t => t.Name.EndsWith("Service"))
                 .AsImplementedInterfaces()
                 .InstancePerRequest();
+
+            // Fábricas de notificaciones (patrón Factory Method); el servicio las recibe como IEnumerable.
+            builder.RegisterAssemblyTypes(ensamblado)
+                .AssignableTo<CreadorDeNotificacion>()
+                .As<CreadorDeNotificacion>()
+                .InstancePerDependency();
+            builder.RegisterType<NotificadorLicitacion>().AsSelf().InstancePerDependency();
 
             builder.RegisterAssemblyTypes(ensamblado)
                 .AsClosedTypesOf(typeof(IValidator<>))
