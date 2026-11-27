@@ -158,6 +158,9 @@
     <Compile Include="ViewModels\LicitacionOfertasViewModel.cs" />
     <Compile Include="ViewModels\ProveedorFormViewModel.cs" />
     <Compile Include="ViewModels\UsuarioFormViewModel.cs" />
+    <Compile Include="Controllers\PortalProveedorController.cs" />
+    <Compile Include="Extensions\IdentidadExtensions.cs" />
+    <Compile Include="ViewModels\OfertaFormViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
@@ -201,6 +204,8 @@
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
+    <Content Include="Views\PortalProveedor\Detalle.cshtml" />
+    <Content Include="Views\PortalProveedor\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

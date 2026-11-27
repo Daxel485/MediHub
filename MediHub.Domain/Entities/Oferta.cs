@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MediHub.Domain.Entities
 {
@@ -11,6 +12,9 @@ namespace MediHub.Domain.Entities
         public string Descripcion { get; set; }
         public DateTime FechaDeEnvio { get; set; }
         public bool Sincronizada { get; set; }
+
+        public int? PlazoEntregaDias { get; set; }
+        public virtual ICollection<DetalleOferta> Detalles { get; set; } = new List<DetalleOferta>();
 
         public virtual Licitacion Licitacion { get; set; }
         public virtual Proveedor Proveedor { get; set; }

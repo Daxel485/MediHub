@@ -13,9 +13,9 @@ namespace MediHub.Application.Interfaces
         Resultado SincronizarOferta(int idOferta);
 
         // Transiciones del ciclo de vida (Borrador → Publicada → En evaluación → Adjudicada → Cerrada).
+        // La adjudicación está en IPortalOfertasService.Adjudicar porque registra también al comprador.
         Resultado Publicar(int idLicitacion);
         Resultado IniciarEvaluacion(int idLicitacion);
-        Resultado Adjudicar(int idLicitacion, int idOferta);
         Resultado Cerrar(int idLicitacion);
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using MediHub.Application.Interfaces;
-using MediHub.Application.Notificaciones;
 using MediHub.Application.Services;
 using MediHub.Application.Validators;
 using MediHub.Domain.Entities;
@@ -31,14 +30,8 @@ namespace MediHub.Tests.Application
         public LicitacionServiceTests()
         {
             _proveedores.Setup(p => p.ObtenerTodos()).Returns(new[] { _drogueria, _distribuidora, _laboratorio });
-            var creadores = new CreadorDeNotificacion[]
-            {
-                new CreadorNotificacionPublicacion(_correo.Object),
-                new CreadorNotificacionAdjudicacion(_correo.Object),
-                new CreadorNotificacionRechazo(_correo.Object)
-            };
             _servicio = new LicitacionService(_repositorio.Object, _proveedores.Object, new LicitacionDtoValidator(new RelojFijo(Hoy)),
-                Mapeador.Crear(), new RelojFijo(Hoy), _bitacora.Object, creadores);
+                Mapeador.Crear(), new RelojFijo(Hoy), _bitacora.Object, Notificador.Crear(_correo.Object, _bitacora.Object));
         }
 
         [Fact]
@@ -75,38 +68,6 @@ namespace MediHub.Tests.Application
         public void Publicar_LicitacionInexistente_DevuelveFallo()
         {
             _servicio.Publicar(404).Exito.Should().BeFalse();
-        }
-
-        [Fact]
-        public void Adjudicar_NotificaAdjudicacionAlGanadorYRechazoALosDemas()
-        {
-            var ganadora = Oferta(10, _drogueria);
-            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion, ganadora, Oferta(11, _distribuidora));
-            _repositorio.Setup(r => r.ObtenerParaActualizar(1)).Returns(licitacion);
-            var asuntos = new Dictionary<string, string>();
-            _correo.Setup(c => c.Enviar(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Callback<string, string, string>((destino, asunto, cuerpo) => asuntos[destino] = asunto);
-
-            var resultado = _servicio.Adjudicar(1, 10);
-
-            resultado.Exito.Should().BeTrue();
-            licitacion.EstadoDelProceso.Should().Be(EstadoLicitacion.Adjudicada);
-            licitacion.IdOfertaAdjudicada.Should().Be(10);
-            asuntos[_drogueria.CorreoElectronico].Should().StartWith("Licitación adjudicada");
-            asuntos[_distribuidora.CorreoElectronico].Should().StartWith("Resultado de la licitación");
-            asuntos.Should().HaveCount(2);
-        }
-
-        [Fact]
-        public void Adjudicar_ProveedorConVariasOfertas_RecibeUnSoloCorreo()
-        {
-            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion,
-                Oferta(10, _drogueria), Oferta(11, _distribuidora), Oferta(12, _distribuidora));
-            _repositorio.Setup(r => r.ObtenerParaActualizar(1)).Returns(licitacion);
-
-            _servicio.Adjudicar(1, 10);
-
-            _correo.Verify(c => c.Enviar(_distribuidora.CorreoElectronico, It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]

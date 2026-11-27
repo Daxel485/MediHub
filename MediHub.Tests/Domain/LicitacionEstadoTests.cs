@@ -41,9 +41,21 @@ namespace MediHub.Tests.Domain
         }
 
         [Fact]
+        public void IniciarEvaluacion_AntesDelCierre_LanzaExcepcion()
+        {
+            var licitacion = Licitacion(EstadoLicitacion.Publicada, new Oferta { IdOferta = 1 });
+
+            Action accion = () => licitacion.IniciarEvaluacion(Hoy);
+
+            accion.Should().Throw<InvalidOperationException>().WithMessage("*sigue abierta*");
+            licitacion.EstadoDelProceso.Should().Be(EstadoLicitacion.Publicada);
+        }
+
+        [Fact]
         public void IniciarEvaluacion_PublicadaSinOfertas_LanzaExcepcion()
         {
             var licitacion = Licitacion(EstadoLicitacion.Publicada);
+            licitacion.FechaDeCierre = Hoy;
 
             Action accion = () => licitacion.IniciarEvaluacion(Hoy);
 
@@ -54,6 +66,7 @@ namespace MediHub.Tests.Domain
         public void IniciarEvaluacion_PublicadaConOfertas_PasaAEnEvaluacion()
         {
             var licitacion = Licitacion(EstadoLicitacion.Publicada, new Oferta { IdOferta = 1 });
+            licitacion.FechaDeCierre = Hoy;
 
             licitacion.IniciarEvaluacion(Hoy);
 
@@ -61,35 +74,35 @@ namespace MediHub.Tests.Domain
         }
 
         [Fact]
-        public void Adjudicar_EnEvaluacion_GuardaLaOfertaGanadora()
+        public void Adjudicar_EnEvaluacion_PasaAAdjudicada()
         {
-            var ganadora = new Oferta { IdOferta = 7, Sincronizada = true };
-            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion, new Oferta { IdOferta = 6, Sincronizada = true }, ganadora);
+            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion);
 
-            var resultado = licitacion.Adjudicar(7, Hoy);
+            licitacion.Adjudicar(Oferta(7, sincronizada: true), Hoy);
 
-            resultado.Should().BeSameAs(ganadora);
             licitacion.EstadoDelProceso.Should().Be(EstadoLicitacion.Adjudicada);
-            licitacion.IdOfertaAdjudicada.Should().Be(7);
+            licitacion.FechaDeModificacion.Should().Be(Hoy);
         }
 
         [Fact]
         public void Adjudicar_OfertaNoSincronizada_LanzaExcepcion()
         {
-            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion, new Oferta { IdOferta = 7, Sincronizada = false });
+            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion);
 
-            Action accion = () => licitacion.Adjudicar(7, Hoy);
+            Action accion = () => licitacion.Adjudicar(Oferta(7, sincronizada: false), Hoy);
 
             accion.Should().Throw<InvalidOperationException>().WithMessage("*sincronizadas*");
-            licitacion.IdOfertaAdjudicada.Should().BeNull();
+            licitacion.EstadoDelProceso.Should().Be(EstadoLicitacion.EnEvaluacion);
         }
 
         [Fact]
         public void Adjudicar_OfertaDeOtraLicitacion_LanzaExcepcion()
         {
-            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion, new Oferta { IdOferta = 7, Sincronizada = true });
+            var licitacion = Licitacion(EstadoLicitacion.EnEvaluacion);
+            var deOtra = Oferta(7, sincronizada: true);
+            deOtra.IdLicitacion = 2;
 
-            Action accion = () => licitacion.Adjudicar(99, Hoy);
+            Action accion = () => licitacion.Adjudicar(deOtra, Hoy);
 
             accion.Should().Throw<InvalidOperationException>();
         }
@@ -115,7 +128,7 @@ namespace MediHub.Tests.Domain
 
             ((Action)(() => licitacion.Publicar(Hoy))).Should().Throw<InvalidOperationException>();
             ((Action)(() => licitacion.IniciarEvaluacion(Hoy))).Should().Throw<InvalidOperationException>();
-            ((Action)(() => licitacion.Adjudicar(1, Hoy))).Should().Throw<InvalidOperationException>();
+            ((Action)(() => licitacion.Adjudicar(Oferta(1, sincronizada: true), Hoy))).Should().Throw<InvalidOperationException>();
             ((Action)(() => licitacion.Cerrar(Hoy))).Should().Throw<InvalidOperationException>()
                 .WithMessage("No se puede cerrar una licitación en estado Cerrada.");
         }
@@ -136,12 +149,27 @@ namespace MediHub.Tests.Domain
         [Theory]
         [InlineData(EstadoLicitacion.Borrador, false)]
         [InlineData(EstadoLicitacion.Publicada, true)]
+        [InlineData(EstadoLicitacion.EnEvaluacion, false)]
+        [InlineData(EstadoLicitacion.Cerrada, false)]
+        public void PermiteRecibirOfertas_SoloPublicada(EstadoLicitacion estado, bool esperado)
+        {
+            Licitacion(estado).EstadoActual.PermiteRecibirOfertas.Should().Be(esperado);
+        }
+
+        [Theory]
+        [InlineData(EstadoLicitacion.Borrador, false)]
+        [InlineData(EstadoLicitacion.Publicada, true)]
         [InlineData(EstadoLicitacion.EnEvaluacion, true)]
         [InlineData(EstadoLicitacion.Adjudicada, false)]
         [InlineData(EstadoLicitacion.Cerrada, false)]
         public void PermiteSincronizarOfertas_SoloMientrasSeRecibenOEvaluan(EstadoLicitacion estado, bool esperado)
         {
             Licitacion(estado).EstadoActual.PermiteSincronizarOfertas.Should().Be(esperado);
+        }
+
+        private static Oferta Oferta(int id, bool sincronizada)
+        {
+            return new Oferta { IdOferta = id, IdLicitacion = 1, Sincronizada = sincronizada };
         }
 
         private static Licitacion Licitacion(EstadoLicitacion estado, params Oferta[] ofertas)

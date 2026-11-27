@@ -4,6 +4,7 @@ using MediHub.Web.Extensions;
 
 namespace MediHub.Web.Controllers
 {
+    [Authorize(Roles = "Administrador")]
     public class ReportesController : Controller
     {
         private readonly IReporteMensualService _servicio;

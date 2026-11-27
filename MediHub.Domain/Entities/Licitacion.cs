@@ -15,7 +15,6 @@ namespace MediHub.Domain.Entities
         public DateTime? FechaDeModificacion { get; set; }
         public bool Estado { get; set; }
         public EstadoLicitacion EstadoDelProceso { get; set; } = EstadoLicitacion.Borrador;
-        public int? IdOfertaAdjudicada { get; set; }
 
         public virtual ICollection<Oferta> Ofertas { get; set; } = new List<Oferta>();
 
@@ -33,9 +32,10 @@ namespace MediHub.Domain.Entities
             EstadoActual.IniciarEvaluacion(this, ahora);
         }
 
-        public Oferta Adjudicar(int idOferta, DateTime ahora)
+        // La oferta ganadora se registra aparte, en la tabla Adjudicacion.
+        public void Adjudicar(Oferta oferta, DateTime ahora)
         {
-            return EstadoActual.Adjudicar(this, idOferta, ahora);
+            EstadoActual.Adjudicar(this, oferta, ahora);
         }
 
         public void Cerrar(DateTime ahora)

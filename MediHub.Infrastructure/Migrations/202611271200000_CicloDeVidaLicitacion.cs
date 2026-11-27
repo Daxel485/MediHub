@@ -9,12 +9,14 @@
         {
             // Las licitaciones existentes ya reciben ofertas, por eso quedan como Publicada (2).
             AddColumn("dbo.Licitacion", "EstadoDelProceso", c => c.Int(nullable: false, defaultValue: 2));
-            AddColumn("dbo.Licitacion", "IdOfertaAdjudicada", c => c.Int());
+
+            // Las que ya tienen ganador en el portal pasan a Adjudicada (4).
+            Sql("UPDATE dbo.Licitacion SET EstadoDelProceso = 4 " +
+                "WHERE IdLicitacion IN (SELECT IdLicitacion FROM dbo.Adjudicacion)");
         }
         
         public override void Down()
         {
-            DropColumn("dbo.Licitacion", "IdOfertaAdjudicada");
             DropColumn("dbo.Licitacion", "EstadoDelProceso");
         }
     }

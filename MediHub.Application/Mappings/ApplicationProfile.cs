@@ -41,13 +41,14 @@ namespace MediHub.Application.Mappings
                 .ForMember(d => d.PuedeCerrar, o => o.MapFrom(s => s.EstadoActual.PuedeCerrar))
                 .ForMember(d => d.PermiteSincronizarOfertas,
                     o => o.MapFrom(s => s.EstadoActual.PermiteSincronizarOfertas));
-            // El estado del proceso y la oferta adjudicada solo cambian mediante las transiciones del dominio.
+            // El estado del proceso solo cambia mediante las transiciones del dominio.
             CreateMap<LicitacionDto, Licitacion>()
                 .ForMember(d => d.FechaDeModificacion, o => o.Ignore())
                 .ForMember(d => d.EstadoDelProceso, o => o.Ignore())
-                .ForMember(d => d.IdOfertaAdjudicada, o => o.Ignore())
                 .ForMember(d => d.Ofertas, o => o.Ignore());
 
+            CreateMap<Licitacion, LicitacionVigenteDto>();
+            CreateMap<DetalleOferta, DetalleOfertaDto>();
             CreateMap<Oferta, OfertaDto>()
                 .ForMember(d => d.NombreProveedor, o => o.MapFrom(s => s.Proveedor.Nombre));
         }

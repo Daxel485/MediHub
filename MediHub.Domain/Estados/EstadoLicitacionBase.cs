@@ -22,6 +22,7 @@ namespace MediHub.Domain.Estados
         public virtual bool PuedeAdjudicar => false;
         public virtual bool PuedeCerrar => false;
         public virtual bool PermiteSincronizarOfertas => false;
+        public virtual bool PermiteRecibirOfertas => false;
 
         public virtual void Publicar(Licitacion licitacion, DateTime ahora)
         {
@@ -33,7 +34,7 @@ namespace MediHub.Domain.Estados
             throw TransicionNoPermitida("pasar a evaluación");
         }
 
-        public virtual Oferta Adjudicar(Licitacion licitacion, int idOferta, DateTime ahora)
+        public virtual void Adjudicar(Licitacion licitacion, Oferta oferta, DateTime ahora)
         {
             throw TransicionNoPermitida("adjudicar");
         }
