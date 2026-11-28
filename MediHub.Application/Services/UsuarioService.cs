@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AutoMapper;
 using FluentValidation;
@@ -42,6 +43,12 @@ namespace MediHub.Application.Services
             return usuario == null ? null : _mapper.Map<UsuarioDto>(usuario);
         }
 
+        public UsuarioDto ObtenerPorIdNetUser(Guid idNetUser)
+        {
+            var usuario = _repositorio.ObtenerPorIdNetUser(idNetUser);
+            return usuario == null ? null : _mapper.Map<UsuarioDto>(usuario);
+        }
+
         public Resultado Registrar(UsuarioDto dto)
         {
             return Ejecutar(Tabla, () =>
@@ -66,6 +73,54 @@ namespace MediHub.Application.Services
                     "Se registró el usuario " + usuario.Identificacion + ".",
                     datosPosteriores: Resumir(usuario));
                 return Resultado.Correcto("Usuario registrado correctamente.");
+            });
+        }
+
+        public Resultado VincularCuenta(UsuarioDto dto, Guid idNetUser)
+        {
+            return Ejecutar(Tabla, () =>
+            {
+                var validacion = _validador.Validate(dto);
+                if (!validacion.IsValid) return Resultado.Invalido(validacion);
+
+                if (_proveedores.ObtenerPorId(dto.IdProveedor) == null)
+                    return Resultado.Fallido("El proveedor seleccionado no existe.");
+
+                var existente = _repositorio.ObtenerPorIdentificacion(dto.Identificacion);
+                if (existente == null)
+                {
+                    var usuario = _mapper.Map<Usuario>(dto);
+                    usuario.IdUsuario = 0;
+                    usuario.IdNetUser = idNetUser;
+                    usuario.FechaDeRegistro = _clock.Ahora;
+                    usuario.FechaDeModificacion = null;
+                    usuario.Estado = true;
+                    _repositorio.Agregar(usuario);
+
+                    Bitacora.RegistrarEvento(Tabla, TipoEvento.Registrar,
+                        "Se registró el usuario " + usuario.Identificacion + " con su cuenta de acceso.",
+                        datosPosteriores: Resumir(usuario));
+                    return Resultado.Correcto("Usuario registrado correctamente.");
+                }
+
+                // La identificación ya existe: solo se enlaza si es el mismo usuario y aún no tiene cuenta.
+                if (existente.IdNetUser.HasValue)
+                    return Resultado.Fallido("La identificación " + dto.Identificacion + " ya tiene una cuenta de acceso.");
+
+                if (existente.IdProveedor != dto.IdProveedor
+                    || !string.Equals(existente.CorreoElectronico, dto.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
+                    return Resultado.Fallido("La identificación " + dto.Identificacion
+                        + " ya está registrada con otro proveedor o con otro correo electrónico.");
+
+                var anterior = Resumir(existente);
+                existente.IdNetUser = idNetUser;
+                existente.FechaDeModificacion = _clock.Ahora;
+                _repositorio.Actualizar(existente);
+
+                Bitacora.RegistrarEvento(Tabla, TipoEvento.Editar,
+                    "Se enlazó la cuenta de acceso del usuario " + existente.IdUsuario + ".",
+                    anterior, Resumir(existente));
+                return Resultado.Correcto("Cuenta enlazada con el usuario existente.");
             });
         }
 

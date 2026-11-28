@@ -1,3 +1,11 @@
+@using MediHub.Domain.Constants
+@using MediHub.Web.Extensions
+@{
+    var autenticado = User.Identity.IsAuthenticated;
+    var esAdministrador = User.IsInRole(Roles.Administrador);
+    var esComprador = User.IsInRole(Roles.Comprador);
+    var esProveedor = User.IsInRole(Roles.Proveedor);
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,11 +24,51 @@
             </button>
             <div class="collapse navbar-collapse" id="menuPrincipal">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">@Html.ActionLink("Proveedores", "Index", "Proveedores", null, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Configuraciones", "Index", "Configuraciones", null, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", User.IsInRole("Proveedor") ? "PortalProveedor" : "Licitaciones", null, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Usuarios", "Index", "Usuarios", null, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Reportes", "Index", "Reportes", null, new { @class = "nav-link" })</li>
+                    @if (esAdministrador || esComprador)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Proveedores", "Index", "Proveedores", null, new { @class = "nav-link" })</li>
+                    }
+                    @* Licitaciones: el Comprador las gestiona y el Proveedor ve las vigentes en su portal. *@
+                    @if (esComprador)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", "Licitaciones", null, new { @class = "nav-link" })</li>
+                    }
+                    @if (esProveedor)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Licitaciones", "Index", "PortalProveedor", null, new { @class = "nav-link" })</li>
+                    }
+                    @if (esAdministrador)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Configuraciones", "Index", "Configuraciones", null, new { @class = "nav-link" })</li>
+                        <li class="nav-item">@Html.ActionLink("Usuarios", "Index", "Usuarios", null, new { @class = "nav-link" })</li>
+                        <li class="nav-item">@Html.ActionLink("Reportes", "Index", "Reportes", null, new { @class = "nav-link" })</li>
+                    }
+                </ul>
+                <ul class="navbar-nav">
+                    @if (autenticado)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @User.ObtenerNombreCompleto() <span class="badge bg-light text-primary ms-1">@User.ObtenerRol()</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>@Html.ActionLink("Mi perfil", "Perfil", "Cuenta", null, new { @class = "dropdown-item" })</li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    @using (Html.BeginForm("CerrarSesion", "Cuenta", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item">Cerrar sesión</button>
+                                    }
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">@Html.ActionLink("Iniciar sesión", "Login", "Cuenta", null, new { @class = "nav-link" })</li>
+                        <li class="nav-item">@Html.ActionLink("Registrarse", "Registro", "Cuenta", null, new { @class = "nav-link" })</li>
+                    }
                 </ul>
             </div>
         </div>

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Web.Mvc;
+using MediHub.Domain.Constants;
 using AutoMapper;
 using MediHub.Application.DTOs;
 using MediHub.Application.Interfaces;
@@ -8,6 +9,7 @@ using MediHub.Web.ViewModels;
 
 namespace MediHub.Web.Controllers
 {
+    [Authorize(Roles = Roles.Administrador)]
     public class UsuariosController : Controller
     {
         private readonly IUsuarioService _servicio;

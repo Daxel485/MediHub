@@ -2,6 +2,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using MediHub.Infrastructure.Data;
+using MediHub.Infrastructure.Identity;
 
 namespace MediHub.Web
 {
@@ -15,6 +16,8 @@ namespace MediHub.Web
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             AutofacConfig.Registrar();
             BaseDeDatos.Inicializar();
+            // Crea la base si hace falta, los roles y las cuentas de ejemplo.
+            IdentityInicializador.Sembrar();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Data.Entity;
+using MediHub.Infrastructure.Identity;
 using MediHub.Infrastructure.Migrations;
 
 namespace MediHub.Infrastructure.Data
@@ -9,6 +10,7 @@ namespace MediHub.Infrastructure.Data
         public static void Inicializar()
         {
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<MediHubContext, Configuration>());
+            IdentityInicializador.ConfigurarInicializador();
         }
     }
 }
