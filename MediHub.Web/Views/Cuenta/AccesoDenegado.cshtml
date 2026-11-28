@@ -1,0 +1,9 @@
+@{
+    ViewBag.Title = "Acceso denegado";
+}
+
+<div class="py-5 text-center">
+    <h1 class="h3">Acceso denegado</h1>
+    <p class="text-muted">Su cuenta no tiene permiso para ver esta página.</p>
+    @Html.ActionLink("Volver al inicio", "Index", "Home", null, new { @class = "btn btn-primary" })
+</div>

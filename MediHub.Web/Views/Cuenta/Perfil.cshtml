@@ -1,0 +1,22 @@
+@model MediHub.Web.ViewModels.PerfilViewModel
+@{
+    ViewBag.Title = "Mi perfil";
+}
+
+<h1 class="h3 mb-3">Mi perfil</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@Model.NombreCompleto</dd>
+    <dt class="col-sm-3">Correo electrónico</dt>
+    <dd class="col-sm-9">@Model.CorreoElectronico</dd>
+    <dt class="col-sm-3">Rol</dt>
+    <dd class="col-sm-9">@Model.Rol</dd>
+    @if (!string.IsNullOrEmpty(Model.NombreProveedor))
+    {
+        <dt class="col-sm-3">Proveedor</dt>
+        <dd class="col-sm-9">@Model.NombreProveedor</dd>
+        <dt class="col-sm-3">Identificación</dt>
+        <dd class="col-sm-9">@Model.Identificacion</dd>
+    }
+</dl>

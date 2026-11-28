@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -27,6 +28,18 @@ namespace MediHub.Infrastructure.Repositories
         {
             return _contexto.Usuarios.Include(u => u.Proveedor)
                 .SingleOrDefault(u => u.IdUsuario == idUsuario);
+        }
+
+        public Usuario ObtenerPorIdentificacion(string identificacion)
+        {
+            return _contexto.Usuarios.Include(u => u.Proveedor)
+                .SingleOrDefault(u => u.Identificacion == identificacion);
+        }
+
+        public Usuario ObtenerPorIdNetUser(Guid idNetUser)
+        {
+            return _contexto.Usuarios.Include(u => u.Proveedor)
+                .SingleOrDefault(u => u.IdNetUser == idNetUser);
         }
 
         public bool ExisteIdentificacion(string identificacion, int? excluirIdUsuario = null)

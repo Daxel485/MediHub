@@ -1,0 +1,97 @@
+@using MediHub.Domain.Constants
+@model MediHub.Web.ViewModels.RegistroViewModel
+@{
+    ViewBag.Title = "Crear cuenta";
+    var tiposDeCuenta = new[]
+    {
+        new SelectListItem { Value = Roles.Proveedor, Text = "Proveedor (envío ofertas a licitaciones)", Selected = Model.Rol == Roles.Proveedor },
+        new SelectListItem { Value = Roles.Comprador, Text = "Comprador (personal de la clínica)", Selected = Model.Rol == Roles.Comprador }
+    };
+}
+
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <h1 class="h3 mb-3">Crear cuenta</h1>
+
+        @using (Html.BeginForm("Registro", "Cuenta", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.Rol, new { @class = "form-label" })
+                @Html.DropDownListFor(m => m.Rol, tiposDeCuenta, new { @class = "form-select", id = "selectorRol" })
+                @Html.ValidationMessageFor(m => m.Rol, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    @Html.LabelFor(m => m.Nombres, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.Nombres, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Nombres, "", new { @class = "text-danger" })
+                </div>
+                <div class="col-md-4 mb-3">
+                    @Html.LabelFor(m => m.PrimerApellido, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.PrimerApellido, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.PrimerApellido, "", new { @class = "text-danger" })
+                </div>
+                <div class="col-md-4 mb-3">
+                    @Html.LabelFor(m => m.SegundoApellido, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.SegundoApellido, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.SegundoApellido, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div id="datosProveedor" class="@(Model.EsProveedor ? "" : "d-none")">
+                <div class="row">
+                    <div class="col-md-7 mb-3">
+                        @Html.LabelFor(m => m.IdProveedor, new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.IdProveedor, Model.Proveedores, "Seleccione un proveedor", new { @class = "form-select" })
+                        @Html.ValidationMessageFor(m => m.IdProveedor, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        @Html.LabelFor(m => m.Identificacion, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Identificacion, new { @class = "form-control", maxlength = "10", placeholder = "112340567" })
+                        @Html.ValidationMessageFor(m => m.Identificacion, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                @Html.LabelFor(m => m.CorreoElectronico, new { @class = "form-label" })
+                @Html.TextBoxFor(m => m.CorreoElectronico, new { @class = "form-control", type = "email", autocomplete = "username" })
+                @Html.ValidationMessageFor(m => m.CorreoElectronico, "", new { @class = "text-danger" })
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    @Html.LabelFor(m => m.Contrasena, new { @class = "form-label" })
+                    @Html.PasswordFor(m => m.Contrasena, new { @class = "form-control", autocomplete = "new-password" })
+                    <div class="form-text">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                    @Html.ValidationMessageFor(m => m.Contrasena, "", new { @class = "text-danger" })
+                </div>
+                <div class="col-md-6 mb-3">
+                    @Html.LabelFor(m => m.ConfirmarContrasena, new { @class = "form-label" })
+                    @Html.PasswordFor(m => m.ConfirmarContrasena, new { @class = "form-control", autocomplete = "new-password" })
+                    @Html.ValidationMessageFor(m => m.ConfirmarContrasena, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Crear cuenta</button>
+            @Html.ActionLink("Ya tengo cuenta", "Login", "Cuenta", null, new { @class = "btn btn-outline-secondary" })
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Los datos del proveedor solo aplican al rol Proveedor.
+        (function () {
+            var selector = document.getElementById("selectorRol");
+            var bloque = document.getElementById("datosProveedor");
+            selector.addEventListener("change", function () {
+                bloque.classList.toggle("d-none", selector.value !== "@Roles.Proveedor");
+            });
+        })();
+    </script>
+}

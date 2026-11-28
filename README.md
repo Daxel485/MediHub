@@ -7,6 +7,7 @@ Proyecto del curso Programación Avanzada (Universidad Fidélitas), Grupo 3.
 
 - .NET Framework 4.8 y ASP.NET MVC 5, con vistas Razor y Bootstrap 5
 - Entity Framework 6 (Code First) sobre SQL Server LocalDB
+- ASP.NET Identity 2.0 con OWIN (autenticación por cookie y roles)
 - Autofac (con un módulo de registro por capa), AutoMapper y FluentValidation
 - Pruebas con xUnit, Moq y FluentAssertions
 
@@ -151,3 +152,39 @@ El comprador entra por **Licitaciones → Ver ofertas**. Al cumplirse la fecha d
 - **Vigencia.** En la base recibida se usan `Licitacion.Estado` y `FechaDeCierre`. La consulta de vigentes y las validaciones de envío, sincronización y adjudicación ya usan las fases del ciclo de vida (ver la sección anterior).
 - **Puntajes.** El comparativo lee `DetalleOferta.Puntaje`. Cada valor aparece como **Pendiente** hasta que el módulo de evaluación lo guarde. Las ofertas históricas del avance anterior conservan el monto global.
 - **Datos.** La migración EF6 `PortalOfertas` agrega el detalle de oferta, el plazo de entrega y la adjudicación. Se aplica mediante el inicializador existente de MediHub.
+
+## Seguridad y control de acceso
+
+La autenticación usa ASP.NET Identity 2.0 con OWIN (`MediHub.Web/Startup.cs`). Las tablas `AspNet*` viven en la misma base
+`MediHubDb`, con su propio contexto (`ApplicationDbContext`) y su propio historial de migraciones, para no tocar el modelo de
+`MediHubContext`. Al iniciar la aplicación se crean los roles y las cuentas de ejemplo (`IdentityInicializador`).
+
+**Cuentas de ejemplo (solo desarrollo):**
+
+- Administrador: `admin@medihub.cr` / `Admin123*`
+- Comprador: `comprador@medihub.cr` / `Comprador123*`
+- Proveedor (Droguería Central): `mrodriguez@drogueriacentral.cr` / `Proveedor123*`
+- Proveedor (Distribuidora Médica del Valle): `cjimenez@medvalle.cr` / `Proveedor123*`
+
+**Acceso por controlador.** Todo el sitio exige sesión (filtro global en `FilterConfig`); solo el login y el registro son anónimos.
+
+| Controlador | Administrador | Comprador | Proveedor |
+|---|:---:|:---:|:---:|
+| Proveedores | Sí | Sí | No |
+| Licitaciones (gestión, ofertas, adjudicación) | No | Sí | No |
+| Portal del proveedor (licitaciones vigentes y ofertas) | No | No | Sí |
+| Reportes, Configuraciones, Usuarios | Sí | No | No |
+| Home, Cuenta (perfil) | Sí | Sí | Sí |
+
+**Registro.** Cualquier persona puede crear una cuenta de Comprador o de Proveedor; el Administrador no se puede elegir.
+Una cuenta de Proveedor crea (o enlaza, si la identificación ya existía sin cuenta) un registro de `Usuario` y guarda en
+`Usuario.IdNetUser` el Id de la cuenta de Identity.
+
+**Notas de integración:**
+
+- Los roles tienen constantes en `MediHub.Domain.Constants.Roles` para usarlas en `[Authorize(Roles = ...)]`. Un
+  `[Authorize(Roles = ...)]` en un método no abre lo que el controlador cierra.
+- Para saber quién es el proveedor con sesión: `User.ObtenerIdNetUser()` y luego `IUsuarioService.ObtenerPorIdNetUser(id)`,
+  que devuelve el `IdProveedor`.
+- Con sesión pero sin el rol necesario se redirige a `/Cuenta/AccesoDenegado` (ver `Startup.cs`).
+
